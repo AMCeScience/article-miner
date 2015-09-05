@@ -2,6 +2,16 @@
 
 class Pubmed_central_parser {
   function run($config, $db) {
+    if ($config["pubmed_central_list_init"]) {
+      echo "Reinitializing the pubmed central list... ";
+      $this->parse($config, $db);
+      echo "done.<br/>";
+    } else {
+      echo "Skipping pubmed central list initialisation.<br/>";
+    }
+  }
+
+  function parse($config, $db) {
     require_once("parse_large_xml.php");
 
     $xml_parser = new XML_parser();
@@ -65,6 +75,22 @@ class Pubmed_central_parser {
     });
 
     fclose($handle);
+
+    // Insert SQL statement
+    $sql = "INSERT INTO Articles (title, abstract, journal) VALUES";
+
+    // Merge all the lines into one array
+    $lines = array();
+
+    foreach ($data as $journal) {
+      array_push($lines, "('" . addslashes($journal["title"]) . "','" . $journal["iso"] . "','" . $journal["issn"] . "','" . addslashes(implode($journal["category"], "; ")) . "','" . implode($journal["category_type"], "; ") . "')");
+    }
+
+    // Implode array
+    $sql .= implode(",", $lines);
+
+    // Insert
+    $db->query($sql);
   }
 }
 
