@@ -76,21 +76,13 @@ class Pubmed_central_parser {
 
     fclose($handle);
 
-    // Insert SQL statement
-    $sql = "INSERT INTO Articles (title, abstract, journal) VALUES";
-
-    // Merge all the lines into one array
-    $lines = array();
-
-    foreach ($data as $journal) {
-      array_push($lines, "('" . addslashes($journal["title"]) . "','" . $journal["iso"] . "','" . $journal["issn"] . "','" . addslashes(implode($journal["category"], "; ")) . "','" . implode($journal["category_type"], "; ") . "')");
+    require_once("journals.php");
+    
+    $journal_model = new Journals();
+    
+    foreach ($articles as $article) {
+      
     }
-
-    // Implode array
-    $sql .= implode(",", $lines);
-
-    // Insert
-    $db->query($sql);
   }
 }
 

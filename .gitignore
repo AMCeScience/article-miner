@@ -1,0 +1,11 @@
+nbproject/private/
+nbproject/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+.htaccess
+.htaccess-dev
+logs/
