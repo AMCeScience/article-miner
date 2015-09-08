@@ -104,6 +104,7 @@ class AlchemyAPI {
 		$this->_ENDPOINTS['taxonomy']['url'] = '/url/URLGetRankedTaxonomy';
 		$this->_ENDPOINTS['taxonomy']['html'] = '/html/HTMLGetRankedTaxonomy';
 		$this->_ENDPOINTS['taxonomy']['text'] = '/text/TextGetRankedTaxonomy';
+		$this->_ENDPOINTS['apikeyinfo']['info'] = '/info/GetAPIKeyInfo';
 	}
 
 
@@ -714,6 +715,36 @@ class AlchemyAPI {
 	  return $this->analyze($this->_ENDPOINTS['combined'][$flavor], $options);
 	}	
 	
+	/**
+	  *	Gets information about an API Key, including the daily transaction limit and 
+	  * 	consumed transactions.
+	  *	
+	  *	INPUT:
+	  *	options -> various parameters that can be used to adjust how the API works, see below for more info on the available options.
+	  *	
+	  *	Available Options:
+	  *	none
+	  *
+	  *	OUTPUT:
+	  *	The response, already converted from JSON to a PHP object. 
+	*/
+	public function transactioninfo() {
+		//Insert the base URL
+		$url = $this->_BASE_URL . $this->_ENDPOINTS['apikeyinfo']['info'];
+
+		//Add the API Key and set the output mode to JSON
+		$url = $url . "?apikey=" . $this->_api_key . "&outputMode=json";
+		
+		//Fire off the HTTP Request
+		try {
+			$fp = @fopen($url, 'rb', false, stream_context_create($header));
+			$response = @stream_get_contents($fp);
+			fclose($fp);
+			return json_decode($response, true);
+		} catch (Exception $e) {
+			return array('status'=>'ERROR', 'statusInfo'=>'Network error');
+		}
+	}
 
 	/**
 	  *	HTTP Request wrapper that is called by the endpoint functions. This function is not intended to be called through an external interface. 

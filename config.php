@@ -12,5 +12,11 @@ $config["database"]["password"] = "root";
 $config["database"]["schema"] = "mine";
 
 $config["alchemy_key_dir"] = "/Users/Allard/workspace/miner/alchemyAPI/";
-$config["alchemy_clear_tables"] = true;
+$config["alchemy_reinit"] = false;
+$config["alchemy_transactions"] = 1000;
+
+if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
+  $config["journal_list_reinit"] = true;
+  $config["pubmed_central_list_reinit"] = true;
+}
 ?>

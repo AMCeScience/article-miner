@@ -28,7 +28,7 @@ class Pubmed_central_parser {
     $handle = fopen($config["pubmed_central_dir"], "r");
 
     // Get the nodestring incrementally from the xml file by defining a callback
-    $articles = $xml_parser->nodeStringFromXMLFile($handle, "<article", "</article>", $db, function($xml_parser, $db, $nodeText){
+    $articles = $xml_parser->nodeStringFromXMLFile($handle, "<article", "</article>", $db, function($xml_parser, $db, $nodeText) {
       $simpleXML = simplexml_load_string($nodeText);
 
       // Title

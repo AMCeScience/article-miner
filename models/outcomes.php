@@ -3,7 +3,7 @@
 class Outcomes {
   function last($db) {
     $result = $db->query("SELECT * FROM Outcomes ORDER BY id DESC LIMIT 1");
-
+    
     if ($result) {
       return $result->fetch_array();
     }

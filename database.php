@@ -18,7 +18,7 @@ class Connector {
 
   function query($sql) {
     $result = $this->connection->query($sql);
-    
+
     if (stripos($sql, 'select') !== false && isset($result->num_rows) && $result->num_rows < 1) {
       return false;
     }

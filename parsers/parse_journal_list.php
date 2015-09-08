@@ -2,7 +2,11 @@
 
 class Journal_list {
   function run($config, $db) {
-    if ($config["journal_list_reinit"] || !$this->is_filled($db)) {
+    require_once("models/journal_definitions.php");
+
+    $definitions_model = new Journal_definitions();
+
+    if ($config["journal_list_reinit"] || !$definitions_model->is_filled($db)) {
       echo "Reinitializing the journal list... ";
       $this->parse($config, $db);
       echo "done.<br/>";
@@ -15,10 +19,12 @@ class Journal_list {
     // Open CSV file
     $csv_file = fopen($config["journal_list_dir"], "r");
 
+    require_once("models/journal_definitions.php");
+
+    $definitions_model = new Journal_definitions();
+
     // Clear table
-    $db->query("SET FOREIGN_KEY_CHECKS = 0");
-    $db->query("TRUNCATE TABLE Journal_definitions");
-    $db->query("SET FOREIGN_KEY_CHECKS = 1");
+    $definitions_model->clear($db);
 
     $data = array();
 
@@ -58,16 +64,6 @@ class Journal_list {
 
     // Insert
     $db->query($sql);
-  }
-
-  function is_filled($db) {
-    $result = $db->query("SELECT id FROM Journal_definitions");
-
-    if ($result && $result->num_rows > 0) {
-      return true;
-    }
-
-    return false;
   }
 }
 

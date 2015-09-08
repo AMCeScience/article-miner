@@ -22,6 +22,22 @@ class Journal_definitions {
 
     return false;
   }
+
+  function is_filled($db) {
+    $result = $db->query("SELECT id FROM Journal_definitions");
+
+    if ($result && $result->num_rows > 0) {
+      return true;
+    }
+
+    return false;
+  }
+
+  function clear($db) {
+    $db->query("SET FOREIGN_KEY_CHECKS = 0");
+    $db->query("TRUNCATE TABLE Journal_definitions");
+    $db->query("SET FOREIGN_KEY_CHECKS = 1");
+  }
 }
 
 ?>
