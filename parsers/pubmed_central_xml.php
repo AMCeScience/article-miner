@@ -27,6 +27,12 @@ class Pubmed_central_parser {
     // Open the XML
     $handle = fopen($config["pubmed_central_dir"], "r");
 
+    if (!$handle) {
+      echo "Error: XML file not found at: " . $config["pubmed_central_dir"];
+
+      exit;
+    }
+
     // Get the nodestring incrementally from the xml file by defining a callback
     $articles = $xml_parser->nodeStringFromXMLFile($handle, "<article", "</article>", $db, function($xml_parser, $db, $nodeText) {
       $simpleXML = simplexml_load_string($nodeText);

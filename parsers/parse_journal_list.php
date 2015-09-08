@@ -18,6 +18,12 @@ class Journal_list {
   function parse($config, $db) {
     // Open CSV file
     $csv_file = fopen($config["journal_list_dir"], "r");
+    
+    if (!$csv_file) {
+      echo "Error: CSV file not found at: " . $config["journal_list_dir"];
+
+      exit;
+    }
 
     require_once("models/journal_definitions.php");
 
