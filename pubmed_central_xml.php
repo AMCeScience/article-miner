@@ -2,9 +2,17 @@
 
 class Pubmed_central_parser {
   function run($config, $db) {
-    if ($config["pubmed_central_list_init"]) {
+    require_once("models/articles.php");
+    require_once("models/scriptchecker.php");
+
+    $article_model = new Articles();
+    $script_model = new ScriptChecker();
+
+    if ($config["pubmed_central_list_reinit"] || !$article_model->is_filled($db) || !$script_model->has_ran($db, 'pubmed')) {
       echo "Reinitializing the pubmed central list... ";
       $this->parse($config, $db);
+
+      $script_model->set($db, 'pubmed', true);
       echo "done.<br/>";
     } else {
       echo "Skipping pubmed central list initialisation.<br/>";
@@ -35,8 +43,16 @@ class Pubmed_central_parser {
       $abstract = "";
 
       $result = $simpleXML->xpath('//abstract');
+      
       if (isset($result[0])) {
-        $abstract = (string) $result[0];
+        // Abstract contain HTML tags for some reason
+        // Revert to plain XML string
+        $xml = $result[0]->asXML();
+        // Remove the tags
+        $no_tags = trim(strip_tags($xml));
+        
+        // Remove any extra whitespace
+        $abstract = preg_replace('/(\s)+/', ' ', $no_tags);
       }
 
       // Keywords
@@ -44,7 +60,7 @@ class Pubmed_central_parser {
 
       $result = $simpleXML->xpath('//kwd-group/kwd');
       while(list( , $keyword) = each($result)) {
-        array_push($keywords, $keyword);
+        array_push($keywords, (string) $keyword);
       }
 
       // Journal-Title
@@ -76,12 +92,17 @@ class Pubmed_central_parser {
 
     fclose($handle);
 
-    require_once("journals.php");
+    require_once("models/journals.php");
+    require_once("models/articles.php");
     
     $journal_model = new Journals();
+    $article_model = new Articles();
+
+    $journal_model->clear($db);
+    $article_model->clear($db);
     
     foreach ($articles as $article) {
-      
+      $article_model->insert($db, $article);
     }
   }
 }
