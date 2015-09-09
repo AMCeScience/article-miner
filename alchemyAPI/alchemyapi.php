@@ -718,12 +718,6 @@ class AlchemyAPI {
 	/**
 	  *	Gets information about an API Key, including the daily transaction limit and 
 	  * 	consumed transactions.
-	  *	
-	  *	INPUT:
-	  *	options -> various parameters that can be used to adjust how the API works, see below for more info on the available options.
-	  *	
-	  *	Available Options:
-	  *	none
 	  *
 	  *	OUTPUT:
 	  *	The response, already converted from JSON to a PHP object. 
