@@ -31,6 +31,15 @@ class AlchemyOutcomes {
     $db->query("INSERT INTO Alchemy_entities (type, relevance, count, text, outcome) VALUES ('$fixed', '{$entity["relevance"]}', '{$entity["count"]}', '{$entity["text"]}', '$outcome_id')");
   }
 
+  function statistics($db) {
+    $result_concepts = $db->query("SELECT text, count(*) as count FROM Alchemy_concepts group by text order by count desc limit 30");
+    $result_taxonomy = $db->query("SELECT label, count(*) as count FROM Alchemy_taxonomy where confident != 'no' group by label order by count desc limit 30");
+    $result_entities = $db->query("SELECT text, type, count(*) as count FROM Alchemy_entities group by text order by count desc limit 30");
+    $result_keywords = $db->query("SELECT text, count(*) as count FROM Alchemy_keywords group by text order by count desc limit 30");
+
+    return array("concepts" => $result_concepts, "taxonomy" => $result_taxonomy, "entities" => $result_entities, "keywords" => $result_keywords);
+  }
+
   function clear($db) {
     // Clear table
     $db->query("SET FOREIGN_KEY_CHECKS = 0");

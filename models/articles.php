@@ -1,12 +1,12 @@
 <?php
 
 class Articles {
-  function next($db, $last_id) {
-    $result = $db->query("SELECT * FROM Articles WHERE id > $last_id ORDER BY id ASC LIMIT 1");
+  function find_by_id($db, $id) {
+    $result = $db->query("SELECT * FROM Articles WHERE id = $id");
 
     if ($result) {
       return $result->fetch_array();
-    }
+    } 
 
     return false;
   }
@@ -32,9 +32,11 @@ class Articles {
   function insert($db, $article) {
     require_once("journals.php");
     require_once("keywords.php");
+    require_once("outcomes.php");
 
     $journal_model = new Journals();
     $keyword_model = new Keywords();
+    $outcome_model = new Outcomes();
 
     // Insert journal
     $journal_id = $journal_model->insert($db, $article["journal_title"], $article["issn"], $article["journal_iso"]);
@@ -52,6 +54,9 @@ class Articles {
       foreach ($article["keywords"] as $keyword) {
         $keyword_model->insert($db, $keyword, $article_id);
       }
+
+      // Init the outcome couple table
+      $outcome_model->insert($db, $article_id);
 
       return $article_id;
     }

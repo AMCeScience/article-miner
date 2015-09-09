@@ -9,9 +9,9 @@
 
       $db->connect($config);
 
-      require_once("models/outcomes.php");
+      require_once("models/alchemy_outcomes.php");
 
-      $outcome_model = new Outcomes();
+      $outcome_model = new AlchemyOutcomes();
 
       $results = $outcome_model->statistics($db);
     ?>

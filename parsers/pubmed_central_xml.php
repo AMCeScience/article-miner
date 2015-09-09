@@ -100,12 +100,15 @@ class Pubmed_central_parser {
 
     require_once("models/journals.php");
     require_once("models/articles.php");
+    require_once("models/alchemy_outcomes.php");
     
     $journal_model = new Journals();
     $article_model = new Articles();
+    $alchemy_outcome_model = new AlchemyOutcomes();
 
     $journal_model->clear($db);
     $article_model->clear($db);
+    $alchemy_outcome_model->clear($db);
     
     foreach ($articles as $article) {
       $article_model->insert($db, $article);
