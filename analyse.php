@@ -52,6 +52,12 @@ while ($alchemy_transactions_model->used_today($db) <= $config["alchemy_transact
   // Get article id from the last inserted outcome
   $this_outcome = $outcome_model->next($db, $required_alchemy_items);
   
+  if (!$this_outcome) {
+    echo "No outcome was selected";
+    
+    exit;
+  }
+
   // Find the next article to process
   $this_article = $article_model->find_by_id($db, $this_outcome["article"]);
 
