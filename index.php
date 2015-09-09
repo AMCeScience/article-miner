@@ -11,6 +11,9 @@
       <br/>
       <br/>
       <a href="analyse.php">Analyse the articles</a>
+      <br/>
+      <br/>
+      <a href="numbers.php">Statistics!</a>
     </div>
   </body>
 </html>
