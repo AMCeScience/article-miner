@@ -2,7 +2,7 @@
 
 class Outcomes {
   function next($db, $todo) {
-    $sql = "SELECT * FROM Outcomes JOIN Articles ON Outcomes.article = Articles.id WHERE Articles.abstract != '' AND Outcomes.article = 1591 AND ( ";
+    $sql = "SELECT * FROM Outcomes JOIN Articles ON Outcomes.article = Articles.id WHERE Articles.abstract != '' AND ( ";
 
     $where_list = array();
 
