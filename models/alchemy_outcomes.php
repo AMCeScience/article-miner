@@ -40,6 +40,13 @@ class AlchemyOutcomes {
     return array("concepts" => $result_concepts, "taxonomy" => $result_taxonomy, "entities" => $result_entities, "keywords" => $result_keywords);
   }
 
+  function taxonomy_outcomes_by_level($db) {
+    return $db->query("SELECT *, AVG(score), COUNT(id) AS count, ROUND((LENGTH(label) - LENGTH(REPLACE(label, '/', '')))) AS level
+      FROM Alchemy_taxonomy
+      GROUP BY label
+      ORDER BY count DESC");
+  }
+
   function clear($db) {
     // Clear table
     $db->query("SET FOREIGN_KEY_CHECKS = 0");
