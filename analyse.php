@@ -54,7 +54,7 @@ while ($alchemy_transactions_model->used_today($db) <= $config["alchemy_transact
   
   if (!$this_outcome) {
     echo "No outcome was selected";
-    
+
     exit;
   }
 
@@ -139,16 +139,6 @@ while ($alchemy_transactions_model->used_today($db) <= $config["alchemy_transact
           $alchemy_outcome_model->insert_taxonomy($db, $taxonomy, $this_outcome["id"]);
         }
       }
-
-      // Update outcome
-      $outcome_model->update($db, $this_outcome["id"], $items_todo);
-
-      // Update used transactions
-      if (!isset($response["totalTransactions"])) {
-        $response["totalTransactions"] = 1;
-      }
-
-      $alchemy_transactions_model->update_today($db, $response["totalTransactions"] * 1);
     } else {
       echo "Error in the taxonomy call: " . $response["statusInfo"] . "<br/>";
     }
@@ -158,6 +148,16 @@ while ($alchemy_transactions_model->used_today($db) <= $config["alchemy_transact
     // Break out of the while loop
     $safety_catch = 5000;
   }
+
+  // Update outcome
+  $outcome_model->update($db, $this_outcome["id"], $items_todo);
+
+  // Update used transactions
+  if (!isset($response["totalTransactions"])) {
+    $response["totalTransactions"] = 1;
+  }
+
+  $alchemy_transactions_model->update_today($db, $response["totalTransactions"] * 1);
   
   $safety_catch++;
   $article_count++;
