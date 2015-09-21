@@ -27,8 +27,9 @@ class AlchemyOutcomes {
 
   function insert_entity($db, $entity, $outcome_id) {
     $fixed = addslashes($entity["type"]);
+    $text_fixed = addslashes($entity["text"]);
 
-    $db->query("INSERT INTO Alchemy_entities (type, relevance, count, text, outcome) VALUES ('$fixed', '{$entity["relevance"]}', '{$entity["count"]}', '{$entity["text"]}', '$outcome_id')");
+    $db->query("INSERT INTO Alchemy_entities (type, relevance, count, text, outcome) VALUES ('$fixed', '{$entity["relevance"]}', '{$entity["count"]}', '$text_fixed', '$outcome_id')");
   }
 
   function statistics($db) {
