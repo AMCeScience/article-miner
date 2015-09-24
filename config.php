@@ -6,6 +6,9 @@ $config["journal_list_dir"] = "../../Downloads/journal_categories.csv";
 $config["pubmed_central_list_reinit"] = false;
 $config["pubmed_central_dir"] = "../../Downloads/pmc_result.xml";
 
+$config["ovid_list_reinit"] = false;
+$config["ovid_dir"] = "../../Downloads/temp/merge.xml";
+
 $config["database"]["ip"] = "localhost";
 $config["database"]["username"] = "root";
 $config["database"]["password"] = "root";
@@ -19,5 +22,6 @@ $config["alchemy_collect"] = array("taxonomy", "keywords", "entities");
 if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
   $config["journal_list_reinit"] = true;
   $config["pubmed_central_list_reinit"] = true;
+  $config["ovid_list_reinit"] = true;
 }
 ?>

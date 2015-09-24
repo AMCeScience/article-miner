@@ -7,9 +7,6 @@
       <a href="init.php">Initialise the database</a>
       <br/>
       <br/>
-      <a href="init.php?reinit=true">Initialise the database (force)</a>
-      <br/>
-      <br/>
       <a href="analyse.php">Analyse the articles</a>
       <br/>
       <br/>

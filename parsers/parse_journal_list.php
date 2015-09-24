@@ -25,13 +25,6 @@ class Journal_list {
       exit;
     }
 
-    require_once("models/journal_definitions.php");
-
-    $definitions_model = new Journal_definitions();
-
-    // Clear table
-    $definitions_model->clear($db);
-
     $data = array();
 
     // Loop CSV file to get all the journals
