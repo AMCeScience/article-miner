@@ -5,12 +5,12 @@
   <body style="padding: 0; margin: 0; background-color: #333;">
     <div style="padding: 25px; margin: 0 auto; width: 900px; background-color: white; height: 100%;">
       <a href="init.php">Initialise the database</a>
-      <br/>
+      <!-- <br/>
       <br/>
       <a href="analyse.php">Analyse the articles</a>
       <br/>
       <br/>
-      <a href="numbers.php">Statistics!</a>
+      <a href="numbers.php">Statistics!</a> -->
     </div>
   </body>
 </html>

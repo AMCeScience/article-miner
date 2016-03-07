@@ -14,18 +14,18 @@ if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
   require_once("models/journal_definitions.php");
   require_once("models/journals.php");
   require_once("models/articles.php");
-  require_once("models/alchemy_outcomes.php");
+  // require_once("models/alchemy_outcomes.php");
   
   $definitions_model = new Journal_definitions();
   $journal_model = new Journals();
   $article_model = new Articles();
-  $alchemy_outcome_model = new AlchemyOutcomes();
+  // $alchemy_outcome_model = new AlchemyOutcomes();
 
   // Clear tables
   $definitions_model->clear($db);
   $journal_model->clear($db);
   $article_model->clear($db);
-  $alchemy_outcome_model->clear($db);
+  // $alchemy_outcome_model->clear($db);
 }
 
 // Parsing the journal list csv file
