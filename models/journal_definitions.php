@@ -1,7 +1,7 @@
 <?php
 
 class Journal_definitions {
-  function find($db, $title, $issn = "", $iso = "") {
+  function find($db, $title, $iso = "", $issn = "") {
     $title_fixed = addslashes($title);
 
     $sql = "SELECT * FROM Journal_definitions WHERE title LIKE '%$title_fixed%'";

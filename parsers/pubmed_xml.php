@@ -1,6 +1,6 @@
 <?php
 
-class Pubmed_central_parser {
+class Pubmed_parser {
   function run($config, $db) {
     require_once("models/articles.php");
     require_once("models/scriptchecker.php");
@@ -8,24 +8,24 @@ class Pubmed_central_parser {
     $article_model = new Articles();
     $script_model = new ScriptChecker();
 
-    if ($config["pubmed_central_list_reinit"] || !$article_model->is_filled($db) || !$script_model->has_ran($db, 'pubmed_central')) {
-      echo "Reinitializing the pubmed central list... ";
+    if ($config["pubmed_list_reinit"] || !$article_model->is_filled($db) || !$script_model->has_ran($db, 'pubmed')) {
+      echo "Reinitializing the pubmed list... ";
       $this->parse($config, $db);
 
-      $script_model->set($db, 'pubmed_central', true);
+      $script_model->set($db, 'pubmed', true);
       echo "done.<br/>";
     } else {
-      echo "Skipping pubmed central list initialisation.<br/>";
+      echo "Skipping pubmed list initialisation.<br/>";
     }
   }
 
   function parse($config, $db) {
     require_once("parse_large_xml.php");
 
-    $folder = $config["dir"] . $config["pubmed_central_dir"];
+    $folder = $config["dir"] . $config["pubmed_dir"];
 
     if ($config["test"] === true) {
-      $folder = $config["test_dir"] . $config["pubmed_central_dir"];
+      $folder = $config["test_dir"] . $config["pubmed_dir"];
     }
 
     $xml_parser = new XML_parser();
@@ -40,13 +40,13 @@ class Pubmed_central_parser {
     }
 
     // Get the nodestring incrementally from the xml file by defining a callback
-    $articles = $xml_parser->nodeStringFromXMLFile($handle, "<article", "</article>", $db, function($xml_parser, $db, $nodeText) {
+    $articles = $xml_parser->nodeStringFromXMLFile($handle, "<PubmedArticle>", "</PubmedArticle>", $db, function($xml_parser, $db, $nodeText) {
       $simpleXML = simplexml_load_string($nodeText);
 
       // Title
       $title = "";
 
-      $result = $simpleXML->xpath('//title-group/article-title');
+      $result = $simpleXML->xpath('//ArticleTitle');
       if (isset($result[0])) {
         $title = (string) $result[0];
       }
@@ -54,7 +54,7 @@ class Pubmed_central_parser {
       // Abstract
       $abstract = "";
 
-      $result = $simpleXML->xpath('//abstract');
+      $result = $simpleXML->xpath('//Abstract/AbstractText');
       
       if (isset($result[0])) {
         // Abstract contain HTML tags for some reason
@@ -67,18 +67,10 @@ class Pubmed_central_parser {
         $abstract = preg_replace('/(\s)+/', ' ', $no_tags);
       }
 
-      // Keywords
-      $keywords = array();
-
-      $result = $simpleXML->xpath('//kwd-group/kwd');
-      while(list( , $keyword) = each($result)) {
-        array_push($keywords, (string) $keyword);
-      }
-
       // Journal-Title
       $journal_title = "";
 
-      $result = $simpleXML->xpath('//journal-title');
+      $result = $simpleXML->xpath('//Journal/Title');
       if (isset($result[0])) {
         $journal_title = (string) $result[0];
       }
@@ -86,7 +78,7 @@ class Pubmed_central_parser {
       // Journal-ISO
       $journal_iso = "";
 
-      $result = $simpleXML->xpath('//journal-meta/journal-id[@journal-id-type="iso-abbrev"]');
+      $result = $simpleXML->xpath('//Journal/ISOAbbreviation');
       if (isset($result[0])) {
         $journal_iso = (string) $result[0];  
       }      
@@ -94,21 +86,21 @@ class Pubmed_central_parser {
       // ISSN
       $issn = "";
 
-      $result = $simpleXML->xpath('//issn[@pub-type="ppub"]');
+      $result = $simpleXML->xpath('//Journal/ISSN');
       if (isset($result[0])) {
         $issn = (string) $result[0];
       }
 
       $doi = "";
 
-      $result = $simpleXML->xpath('//article-meta/article-id[@pub-id-type="doi"]');
+      $result = $simpleXML->xpath('//ArticleIdList/ArticleId[@IdType="doi"]');
       if (isset($result[0])) {
         $doi = (string) $result[0];
 
         $pattern = '/[0-9\.]+\/.*/';
 
         preg_match($pattern, $doi, $match);
-
+        
         if (count($match) > 0) {
           $doi = $match[0];
         } else {
@@ -118,21 +110,21 @@ class Pubmed_central_parser {
 
       $day = "";
 
-      $result = $simpleXML->xpath('//pub-date/day');
+      $result = $simpleXML->xpath('//Journal/JournalIssue/PubDate/Day');
       if (isset($result[0])) {
         $day = (string) $result[0];
       }
 
       $month = "";
 
-      $result = $simpleXML->xpath('//pub-date/month');
+      $result = $simpleXML->xpath('//Journal/JournalIssue/PubDate/Month');
       if (isset($result[0])) {
         $month = (string) $result[0];
       }
 
       $year = "";
 
-      $result = $simpleXML->xpath('//pub-date/year');
+      $result = $simpleXML->xpath('//Journal/JournalIssue/PubDate/Year');
       if (isset($result[0])) {
         $year = (string) $result[0];
       }
@@ -147,7 +139,7 @@ class Pubmed_central_parser {
     $article_model = new Articles();
     
     foreach ($articles as $article) {
-      $article_model->insert($db, $article, 'pmc');
+      $article_model->insert($db, $article, 'pubmed');
     }
   }
 }

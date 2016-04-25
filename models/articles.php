@@ -11,6 +11,18 @@ class Articles {
     return false;
   }
 
+  function get_titles_and_dois($db) {
+    $result = $db->query("SELECT id, title_stripped, doi,
+      (SELECT count(inner_article.id) FROM Articles AS inner_article WHERE inner_article.doi = outer_article.doi AND inner_article.doi != '' GROUP BY inner_article.doi) as doi_count,
+      ((SELECT count(inner_article.id) FROM Articles AS inner_article WHERE inner_article.title_stripped = outer_article.title_stripped AND inner_article.title_stripped != '' GROUP BY inner_article.title_stripped)) as title_count
+      FROM Articles AS outer_article
+        WHERE (SELECT count(inner_article.id) FROM Articles AS inner_article WHERE inner_article.title_stripped = outer_article.title_stripped AND inner_article.title_stripped != '' GROUP BY inner_article.title_stripped) > 1
+          OR (SELECT count(inner_article.id) FROM Articles AS inner_article WHERE inner_article.doi = outer_article.doi AND inner_article.doi != '' GROUP BY inner_article.doi) > 1
+    ");
+
+    return $result;
+  }
+
   function find($db, $title, $journal_id = "") {
     $title_fixed = addslashes($title);
 
@@ -29,39 +41,34 @@ class Articles {
     return false;
   }
 
-  function insert($db, $article) {
+  function insert($db, $article, $database) {
     require_once("journals.php");
-    require_once("keywords.php");
-    require_once("outcomes.php");
 
     $journal_model = new Journals();
-    $keyword_model = new Keywords();
-    $outcome_model = new Outcomes();
 
     // Insert journal
-    $journal_id = $journal_model->insert($db, $article["journal_title"], $article["issn"], $article["journal_iso"]);
+    $journal_id = $journal_model->insert($db, $article["journal_title"], $article["journal_iso"], $article["journal_issn"]);
 
     // Insert article
+    $title_stripped = preg_replace("/[^a-z]/i", "", strtolower($article["title"]));
     $title_fixed = addslashes($article["title"]);
     $abstract_fixed = addslashes($article["abstract"]);
 
-    $sql = "INSERT INTO Articles (title, abstract, journal) VALUES ('$title_fixed', '$abstract_fixed', '$journal_id')";
+    $sql = "INSERT INTO Articles (title, title_stripped, abstract, journal, day, month, year, doi, search_db) VALUES ('$title_fixed', '$title_stripped', '$abstract_fixed', '$journal_id', '{$article['day']}', '{$article['month']}', '{$article['year']}', '{$article['doi']}', '$database')";
     
     if ($result = $db->query($sql)) {
       $article_id = $db->connection->insert_id;
-
-      // Insert keywords
-      foreach ($article["keywords"] as $keyword) {
-        $keyword_model->insert($db, $keyword, $article_id);
-      }
-
-      // Init the outcome couple table
-      $outcome_model->insert($db, $article_id);
 
       return $article_id;
     }
 
     return false;
+  }
+
+  function delete($db, $ids) {
+    $ids = implode(",", $ids);
+
+    $db->query("DELETE FROM Articles WHERE id IN ($ids)");
   }
 
   function clear($db) {

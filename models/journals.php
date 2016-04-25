@@ -1,17 +1,17 @@
 <?php
 
 class Journals {
-  function find($db, $title, $issn, $iso) {
+  function find($db, $title, $iso, $issn) {
     $title_fixed = addslashes($title);
 
     $sql = "SELECT * FROM Journals WHERE title LIKE '%$title_fixed%'";
 
-    if (strlen($issn) == 9) {
-      $sql .= " OR issn = '$issn'";
-    }
-
     if (strlen($iso) > 0) {
       $sql .= " OR iso LIKE '%$iso%'";
+    }
+
+    if (strlen($issn) > 0) {
+      $sql .= " OR issn LIKE '%$issn%'";
     }
 
     $result = $db->query($sql);
@@ -23,11 +23,11 @@ class Journals {
     return false;
   }
 
-  function insert($db, $title, $issn = "", $iso = "") {
+  function insert($db, $title, $iso = "", $issn = "") {
     require_once("journal_definitions.php");
 
     // Find existing journal
-    $existing_journal = $this->find($db, $title, $issn, $iso);
+    $existing_journal = $this->find($db, $title, $iso, $issn);
 
     if ($existing_journal) {
       return $existing_journal["id"];
@@ -36,14 +36,14 @@ class Journals {
     // Insert journal
     $title_fixed = addslashes($title);
 
-    $sql = "INSERT INTO Journals (title, issn, iso) VALUES ('$title_fixed', '$issn', '$iso')";
+    $sql = "INSERT INTO Journals (title, iso, issn) VALUES ('$title_fixed', '$iso', '$issn')";
     
     if ($result = $db->query($sql)) {
       $journal_id = $db->connection->insert_id;
 
       // Find definition
       $definitions = new Journal_definitions();
-      $journal_definition = $definitions->find($db, $title, $issn, $iso);
+      $journal_definition = $definitions->find($db, $title, $iso, $issn);
 
       $journal_definition_id = '';
 

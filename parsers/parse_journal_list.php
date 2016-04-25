@@ -22,7 +22,7 @@ class Journal_list {
     if (!$csv_file) {
       echo "Error: CSV file not found at: " . $config["journal_list_dir"];
 
-      exit;
+      return;
     }
 
     $data = array();

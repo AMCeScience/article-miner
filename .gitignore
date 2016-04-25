@@ -10,3 +10,4 @@ nb-configuration.xml
 .htaccess-dev
 logs/
 alchemyAPI/api_key.txt
+files/*
