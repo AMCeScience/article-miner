@@ -1,3 +1,7 @@
+CREATE SCHEMA `mine_alchemy`;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
 CREATE TABLE `Alchemy_concepts` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `text` varchar(150) NOT NULL,
@@ -51,6 +55,7 @@ CREATE TABLE `Alchemy_transactions` (
 CREATE TABLE `Articles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(300) NOT NULL,
+  `title_stripped` varchar(300) NOT NULL,
   `abstract` varchar(5000) NOT NULL,
   `journal` int(11) NOT NULL,
   `day` varchar(2) DEFAULT NULL,
@@ -71,14 +76,6 @@ CREATE TABLE `Journal_definitions` (
   `category_type` varchar(20) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11161 DEFAULT CHARSET=utf8;
-
-CREATE TABLE `Journals` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `title` varchar(150) NOT NULL,
-  `iso` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `title` (`title`)
-) ENGINE=InnoDB AUTO_INCREMENT=1654 DEFAULT CHARSET=utf8;
 
 CREATE TABLE `Journals_to_definitions` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -127,3 +124,5 @@ CREATE TABLE `Scripts_ran` (
   `ran` int(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+
+SET FOREIGN_KEY_CHECKS = 1;
