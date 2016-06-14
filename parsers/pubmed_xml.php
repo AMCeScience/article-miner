@@ -1,26 +1,19 @@
 <?php
 
 class Pubmed_parser {
-  function run($config, $db) {
-    require_once("models/articles.php");
-    require_once("models/scriptchecker.php");
-
-    $article_model = new Articles();
-    $script_model = new ScriptChecker();
-
-    if ($config["pubmed_list_reinit"] || !$article_model->is_filled($db) || !$script_model->has_ran($db, 'pubmed')) {
-      echo "Reinitializing the pubmed list... ";
+  function __construct($config, $db) {
+    require_once("libraries/run_check.php");
+    
+    $run_check = new Run_check();
+    if ($run_check->should_run($config, $db, "pubmed")) {
       $this->parse($config, $db);
 
-      $script_model->set($db, 'pubmed', true);
-      echo "done.<br/>";
-    } else {
-      echo "Skipping pubmed list initialisation.<br/>";
+      $run_check->done_run($config, $db, "pubmed");
     }
   }
 
   function parse($config, $db) {
-    require_once("parse_large_xml.php");
+    require_once("libraries/parse_large_xml.php");
 
     $folder = $config["dir"] . $config["pubmed_dir"];
 
@@ -30,10 +23,8 @@ class Pubmed_parser {
 
     $xml_parser = new XML_parser();
 
-    // Open the XML
-    $handle = fopen($folder, "r");
-
-    if (!$handle) {
+    // Open the XML file
+    if (($handle = @fopen($folder, "r")) === false) {
       echo "Error: XML file not found at: " . $folder;
 
       return;
@@ -91,6 +82,7 @@ class Pubmed_parser {
         $issn = (string) $result[0];
       }
 
+      // DOI
       $doi = "";
 
       $result = $simpleXML->xpath('//ArticleIdList/ArticleId[@IdType="doi"]');
@@ -108,6 +100,7 @@ class Pubmed_parser {
         }
       }
 
+      // Publication date
       $day = "";
 
       $result = $simpleXML->xpath('//Journal/JournalIssue/PubDate/Day');
@@ -143,5 +136,3 @@ class Pubmed_parser {
     }
   }
 }
-
-?>

@@ -2,20 +2,13 @@
 
 class WoS_parser {
   function run($config, $db) {
-    require_once("models/articles.php");
-    require_once("models/scriptchecker.php");
-
-    $article_model = new Articles();
-    $script_model = new ScriptChecker();
-
-    if ($config["wos_list_reinit"] || !$article_model->is_filled($db) || !$script_model->has_ran($db, 'wos')) {
-      echo "Reinitializing the WoS list... ";
+    require_once("libraries/run_check.php");
+    
+    $run_check = new Run_check();
+    if ($run_check->should_run($config, $db, "wos")) {
       $this->parse($config, $db);
 
-      $script_model->set($db, 'wos', true);
-      echo "done.<br/>";
-    } else {
-      echo "Skipping WoS list initialisation.<br/>";
+      $run_check->done_run($config, $db, "wos");
     }
   }
 
@@ -34,10 +27,8 @@ class WoS_parser {
 
     foreach($scanned_directory as $file) {
       // Open the file
-      $handle = fopen($folder . "/" . $file, "r");
-
-      if (!$handle) {
-        echo "Error: file not found at: " . $folder;
+      if (($handle = @fopen($folder . "/" . $file, "r")) === false) {
+        echo "Error: file not found at: " . $folder . "/" . $file;
 
         return;
       }
@@ -68,6 +59,7 @@ class WoS_parser {
         // ISSN
         $issn = $line[50];
 
+        // DOI
         $doi = "";
 
         $pattern = '/[0-9\.]+\/.*/';
@@ -78,6 +70,7 @@ class WoS_parser {
           $doi = $match[0];
         }
 
+        // Publication date
         $day = "";
         $month = "";
         $year = $line[32];
@@ -97,5 +90,3 @@ class WoS_parser {
     }
   }
 }
-
-?>

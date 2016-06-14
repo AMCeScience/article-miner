@@ -1,7 +1,7 @@
 <?php
 
 class Journal_list {
-  function run($config, $db) {
+  function __construct($config, $db) {
     require_once("models/journal_definitions.php");
 
     $definitions_model = new Journal_definitions();
@@ -17,10 +17,8 @@ class Journal_list {
 
   function parse($config, $db) {
     // Open CSV file
-    $csv_file = fopen($config["journal_list_dir"], "r");
-    
-    if (!$csv_file) {
-      echo "Error: CSV file not found at: " . $config["journal_list_dir"];
+    if (($csv_file = @fopen($config["journal_list_dir"], "r")) === false) {
+      echo "<br/> Error: CSV file not found at: " . $config["journal_list_dir"] . " ";
 
       return;
     }
@@ -65,5 +63,3 @@ class Journal_list {
     $db->query($sql);
   }
 }
-
-?>

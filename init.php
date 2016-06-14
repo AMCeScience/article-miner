@@ -26,41 +26,47 @@ if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
 }
 
 // Parsing the journal list csv file
-require_once("parsers/parse_journal_list.php");
+if ($config["journal_list_run"] === true) {
+  require_once("parsers/parse_journal_list.php");
 
-$journal_list_parser = new Journal_list();
-$journal_list_parser->run($config, $db);
+  new Journal_list($config, $db);
+}
 
 // Parsing pubmed central XML
-require_once("parsers/pubmed_central_xml.php");
+if ($config["pubmed_central_run"] === true) {
+  require_once("parsers/pubmed_central_xml.php");
 
-$pubmed_central_parser = new Pubmed_central_parser();
-$pubmed_central_parser->run($config, $db);
+  new Pubmed_central_parser($config, $db);
+}
 
 // Parsing Ovid XML
-require_once("parsers/ovid_xml.php");
+if ($config["ovid_run"] === true) {
+  require_once("parsers/ovid_xml.php");
 
-$ovid_parser = new Ovid_parser();
-$ovid_parser->run($config, $db);
+  new Ovid_parser($config, $db);
+}
 
 // Parsing Pubmed XML
-require_once("parsers/pubmed_xml.php");
+if ($config["pubmed_run"] === true) {
+  require_once("parsers/pubmed_xml.php");
 
-$pubmed_parser = new Pubmed_parser();
-$pubmed_parser->run($config, $db);
+  new Pubmed_parser($config, $db);
+}
 
-// // Parsing WoS tab
-// require_once("parsers/webofscience_tab.php");
+// Parsing Web of Science/Web of Knowledge tab delimited file
+if ($config["wos_run"] === true) {
+  require_once("parsers/webofscience_tab.php");
 
-// $wos_parser = new WoS_parser();
-// $wos_parser->run($config, $db);
+  new WoS_parser($config, $db);
+}
 
-// // Parsing Scopus CSV
-// require_once("parsers/scopus_csv.php");
+// Parsing Scopus CSV
+if ($config["scopus_run"] === true) {
+  require_once("parsers/scopus_csv.php");
 
-// $scopus_parser = new Scopus_parser();
-// $scopus_parser->run($config, $db);
+  new Scopus_parser($config, $db);
+}
 
-echo "Time elapsed: " . (microtime(true) - $time_start) . "s";
+echo "Time elapsed: " . (microtime(true) - $time_start) . "s <br/>";
 
-?>
+echo "<a href='/index.php'>Back to index page</a>";

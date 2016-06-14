@@ -1,21 +1,14 @@
 <?php
 
 class Ovid_parser {
-  function run($config, $db) {
-    require_once("models/articles.php");
-    require_once("models/scriptchecker.php");
-
-    $article_model = new Articles();
-    $script_model = new ScriptChecker();
-
-    if ($config["ovid_list_reinit"] || !$article_model->is_filled($db) || !$script_model->has_ran($db, 'ovid')) {
-      echo "Reinitializing the ovid list... ";
+  function __construct($config, $db) {
+    require_once("libraries/run_check.php");
+    
+    $run_check = new Run_check();
+    if ($run_check->should_run($config, $db, "ovid")) {
       $this->parse($config, $db);
 
-      $script_model->set($db, 'ovid', true);
-      echo "done.<br/>";
-    } else {
-      echo "Skipping ovid central list initialisation.<br/>";
+      $run_check->done_run($config, $db, "ovid");
     }
   }
 
@@ -26,7 +19,7 @@ class Ovid_parser {
       $folder = $config["test_dir"] . $config["ovid_dir"];
     }
 
-    require_once("parse_large_xml.php");
+    require_once("libraries/parse_large_xml.php");
 
     $xml_parser = new XML_parser();
 
@@ -38,10 +31,8 @@ class Ovid_parser {
 
     foreach($scanned_directory as $file) {
       // Open the XML
-      $handle = fopen($folder . "/" . $file, "r");
-
-      if (!$handle) {
-        echo "Error: XML file not found at: " . $folder;
+      if (($handle = @fopen($folder . "/" . $file, "r")) === false) {
+        echo "Error: XML file not found at: " . $folder . "/" . $file;
 
         return;
       }
@@ -103,6 +94,7 @@ class Ovid_parser {
           $issn = (string) $result[0];
         }
 
+        // DOI
         $doi = "";
 
         $result = $simpleXML->xpath('//F[@L="Digital Object Identifier"]/D');
@@ -120,6 +112,7 @@ class Ovid_parser {
           }
         }
 
+        // Publication date
         $day = "";
         $month = "";
         $year = "";
@@ -147,5 +140,3 @@ class Ovid_parser {
     }
   }
 }
-
-?>

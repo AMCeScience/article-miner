@@ -1,3 +1,8 @@
+CREATE SCHEMA `miner`;
+use miner;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
 CREATE TABLE `Articles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(300) NOT NULL,
@@ -53,3 +58,5 @@ CREATE TABLE `Scripts_ran` (
   `ran` int(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+SET FOREIGN_KEY_CHECKS = 1;

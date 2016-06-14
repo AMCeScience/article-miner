@@ -51,4 +51,6 @@ if (count($ids) > 1) {
   $article_model->delete($db, $ids);
 }
 
-echo "Time elapsed: " . (microtime(true) - $time_start) . "s";
+echo "Time elapsed: " . (microtime(true) - $time_start) . "s <br/>";
+
+echo "<a href='/index.php'>Back to index page</a>";
