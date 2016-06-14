@@ -1,7 +1,9 @@
 <?php
 
 class Journals {
-  function find($db, $title, $iso, $issn) {
+  // Search for a journal by title
+  // Optionally also searches by iso or issn
+  function find($db, $title, $iso = "", $issn = "") {
     $title_fixed = addslashes($title);
 
     $sql = "SELECT * FROM Journals WHERE title LIKE '%$title_fixed%'";
@@ -23,35 +25,37 @@ class Journals {
     return false;
   }
 
+  // Insert a journal
   function insert($db, $title, $iso = "", $issn = "") {
     require_once("journal_definitions.php");
 
     // Find existing journal
     $existing_journal = $this->find($db, $title, $iso, $issn);
 
+    // If journal already exists in DB, return the id
     if ($existing_journal) {
       return $existing_journal["id"];
     }
 
     // Insert journal
     $title_fixed = addslashes($title);
-
-    $sql = "INSERT INTO Journals (title, iso, issn) VALUES ('$title_fixed', '$iso', '$issn')";
     
-    if ($result = $db->query($sql)) {
+    if ($result = $db->query("INSERT INTO Journals (title, iso, issn) VALUES ('$title_fixed', '$iso', '$issn')")) {
       $journal_id = $db->connection->insert_id;
 
-      // Find definition
-      $definitions = new Journal_definitions();
-      $journal_definition = $definitions->find($db, $title, $iso, $issn);
+      include("config.php");
+      
+      // Check if journal list is set in config
+      if ($config["journal_list_run"] === true) {
+        // Find definition
+        $definitions = new Journal_definitions();
+        $journal_definition = $definitions->find($db, $title, $iso, $issn);
 
-      $journal_definition_id = '';
-
-      if ($journal_definition) {
-        $journal_definition_id = $journal_definition["id"];
-
-        // Insert couple table
-        $db->query("INSERT INTO Journals_to_definitions (journal, definition) VALUES ('$journal_id', '$journal_definition_id')");
+        // If definition was found insert a link back to the inserted journal ($journal_id)
+        if ($journal_definition) {
+          // Insert into couple table
+          $db->query("INSERT INTO Journals_to_definitions (journal, definition) VALUES ('$journal_id', '{$journal_definition['id']}')");
+        }
       }
 
       return $journal_id;
@@ -60,6 +64,7 @@ class Journals {
     return false;
   }
 
+  // Truncate the journals table
   function clear($db) {
     // Clear table
     $db->query("SET FOREIGN_KEY_CHECKS = 0");
@@ -68,5 +73,3 @@ class Journals {
     $db->query("SET FOREIGN_KEY_CHECKS = 1");
   }
 }
-
-?>

@@ -1,21 +1,14 @@
 <?php
 
 class Scopus_parser {
-  function run($config, $db) {
-    require_once("models/articles.php");
-    require_once("models/scriptchecker.php");
-
-    $article_model = new Articles();
-    $script_model = new ScriptChecker();
-
-    if ($config["scopus_list_reinit"] || !$article_model->is_filled($db) || !$script_model->has_ran($db, 'scopus')) {
-      echo "Reinitializing the Scopus list... ";
+  function __construct($config, $db) {
+    require_once("libraries/run_check.php");
+    
+    $run_check = new Run_check();
+    if ($run_check->should_run($config, $db, "scopus")) {
       $this->parse($config, $db);
 
-      $script_model->set($db, 'scopus', true);
-      echo "done.<br/>";
-    } else {
-      echo "Skipping Scopus list initialisation.<br/>";
+      $run_check->done_run($config, $db, "scopus");
     }
   }
 
@@ -26,6 +19,7 @@ class Scopus_parser {
       $folder = $config["test_dir"] . $config["scopus_dir"];
     }
 
+    // Hard set PHP config, used for CSV file line endings
     ini_set("auto_detect_line_endings", true);
 
     $scanned_directory = array_diff(scandir($folder), array('..', '.'));
@@ -34,10 +28,8 @@ class Scopus_parser {
 
     foreach($scanned_directory as $file) {
       // Open the file
-      $handle = fopen($folder . "/" . $file, "r");
-
-      if (!$handle) {
-        echo "Error: file not found at: " . $folder;
+      if (($handle = @fopen($folder . "/" . $file, "r")) === false) {
+        echo "Error: file not found at: " . $folder . "/" . $file;
 
         return;
       }
@@ -66,6 +58,7 @@ class Scopus_parser {
         // ISSN
         $issn = "";
 
+        // DOI
         $doi = "";
 
         $pattern = '/[0-9\.]+\/.*/';
@@ -76,6 +69,7 @@ class Scopus_parser {
           $doi = $match[0];
         }
 
+        // Publication date
         $day = "";
         $month = "";
         $year = $line[2];
@@ -95,5 +89,3 @@ class Scopus_parser {
     }
   }
 }
-
-?>

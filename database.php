@@ -30,5 +30,3 @@ class Connector {
     return $result;
   }
 }
-
-?>

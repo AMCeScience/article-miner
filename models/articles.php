@@ -1,6 +1,29 @@
 <?php
 
 class Articles {
+  // Count all articles
+  function count($db) {
+    $result = $db->query("SELECT count(id) AS count FROM Articles");
+
+    if ($result) {
+      return $result->fetch_array()['count'];
+    }
+
+    return 0;
+  }
+
+  // Count all articles with non-empty abstract field
+  function count_not_empty($db) {
+    $result = $db->query("SELECT count(id) AS count FROM Articles WHERE abstract != ''");
+
+    if ($result) {
+      return $result->fetch_array()['count'];
+    }
+
+    return 0;
+  }
+
+  // Get an article by its id
   function find_by_id($db, $id) {
     $result = $db->query("SELECT * FROM Articles WHERE id = $id");
 
@@ -11,56 +34,60 @@ class Articles {
     return false;
   }
 
+  // Get titles (stripped of all characters other than a-z) and DOIs of all articles in DB
+  // Also, count available (i.e. non-empty) titles and DOIs
   function get_titles_and_dois($db) {
-    $result = $db->query("SELECT id, title_stripped, doi,
-      (SELECT count(inner_article.id) FROM Articles AS inner_article WHERE inner_article.doi = outer_article.doi AND inner_article.doi != '' GROUP BY inner_article.doi) as doi_count,
-      ((SELECT count(inner_article.id) FROM Articles AS inner_article WHERE inner_article.title_stripped = outer_article.title_stripped AND inner_article.title_stripped != '' GROUP BY inner_article.title_stripped)) as title_count
+    $result = $db->query("SELECT id, title_stripped, doi, (
+          SELECT count(inner_article.id) FROM Articles AS inner_article 
+          WHERE inner_article.doi = outer_article.doi AND inner_article.doi != '' 
+          GROUP BY inner_article.doi
+        ) as doi_count, (
+          (SELECT count(inner_article.id) FROM Articles AS inner_article 
+          WHERE inner_article.title_stripped = outer_article.title_stripped AND inner_article.title_stripped != '' 
+          GROUP BY inner_article.title_stripped)
+        ) as title_count
       FROM Articles AS outer_article
-        WHERE (SELECT count(inner_article.id) FROM Articles AS inner_article WHERE inner_article.title_stripped = outer_article.title_stripped AND inner_article.title_stripped != '' GROUP BY inner_article.title_stripped) > 1
-          OR (SELECT count(inner_article.id) FROM Articles AS inner_article WHERE inner_article.doi = outer_article.doi AND inner_article.doi != '' GROUP BY inner_article.doi) > 1
+        WHERE (
+          SELECT count(inner_article.id) FROM Articles AS inner_article 
+          WHERE inner_article.title_stripped = outer_article.title_stripped AND inner_article.title_stripped != '' 
+          GROUP BY inner_article.title_stripped
+        ) > 1 OR (
+          SELECT count(inner_article.id) FROM Articles AS inner_article 
+          WHERE inner_article.doi = outer_article.doi AND inner_article.doi != '' 
+          GROUP BY inner_article.doi
+        ) > 1
     ");
 
     return $result;
   }
 
-  function find($db, $title, $journal_id = "") {
-    $title_fixed = addslashes($title);
-
-    $sql = "SELECT * FROM Articles WHERE title LIKE '%$title_fixed%'";
-
-    if (strlen($journal_id) > 0) {
-      $sql .= " OR journal = '$journal_id'";
-    }
-
-    $result = $db->query($sql);
-
-    if ($result) {
-      return $result->fetch_array();
-    } 
-
-    return false;
-  }
-
+  // Insert an articles
+  // Takes an article as input as formatted by the parsers
+  // Also inserts the journal related to the article
   function insert($db, $article, $database) {
+    require_once("journals.php");
     require_once("outcomes.php");
 
-    // $journal_model = new Journals();
+    $journal_model = new Journals();
 
-    // Insert journal
-    // $journal_id = $journal_model->insert($db, $article["journal_title"], $article["journal_iso"], $article["journal_issn"]);
-    $journal_id = 0;
+    // Insert journal, if the journal already exists the existing journal_id is returned
+    $journal_id = $journal_model->insert($db, $article["journal_title"], $article["journal_iso"], $article["journal_issn"]);
 
     // Insert article
+    // Strip title of any characters other than a-z, used to compare articles to each other
     $title_stripped = preg_replace("/[^a-z]/i", "", strtolower($article["title"]));
     $title_fixed = addslashes($article["title"]);
     $abstract_fixed = addslashes($article["abstract"]);
 
-    $sql = "INSERT INTO Articles (title, title_stripped, abstract, journal, day, month, year) VALUES ('$title_fixed', '$title_stripped', '$abstract_fixed', '$journal_id', '{$article['day']}', '{$article['month']}', '{$article['year']}')";
+    $sql = "INSERT INTO Articles (title, title_stripped, abstract, journal, day, month, year, doi, search_db) 
+      VALUES ('$title_fixed', '$title_stripped', '$abstract_fixed', '$journal_id', '{$article['day']}', 
+        '{$article['month']}', '{$article['year']}', '{$article['doi']}', '$database')";
     
     if ($result = $db->query($sql)) {
       $article_id = $db->connection->insert_id;
 
       $outcomes_model = new Outcomes();
+
       $outcomes_model->insert($db, $article_id);
 
       return $article_id;
@@ -69,20 +96,15 @@ class Articles {
     return false;
   }
 
+  // Delete (an) article(s)
+  // Takes either a single id or array of ids as input
   function delete($db, $ids) {
     $ids = implode(",", $ids);
 
     $db->query("DELETE FROM Articles WHERE id IN ($ids)");
   }
 
-  function clear($db) {
-    // Clear table
-    $db->query("SET FOREIGN_KEY_CHECKS = 0");
-    $db->query("TRUNCATE TABLE Articles");
-    $db->query("TRUNCATE TABLE Outcomes");
-    $db->query("SET FOREIGN_KEY_CHECKS = 1");
-  }
-
+  // Checks whether there are any rows in the articles table
   function is_filled($db) {
     $result = $db->query("SELECT id FROM Articles");
 
@@ -92,6 +114,12 @@ class Articles {
 
     return false;
   }
-}
 
-?>
+  // Truncate the article table
+  function clear($db) {
+    // Clear table
+    $db->query("SET FOREIGN_KEY_CHECKS = 0");
+    $db->query("TRUNCATE TABLE Articles");
+    $db->query("SET FOREIGN_KEY_CHECKS = 1");
+  }
+}

@@ -1,6 +1,8 @@
 <?php
 
 class Journal_definitions {
+  // Search for a journal definition by title
+  // Optionally also searches by iso or issn
   function find($db, $title, $iso = "", $issn = "") {
     $title_fixed = addslashes($title);
 
@@ -23,6 +25,7 @@ class Journal_definitions {
     return false;
   }
 
+  // Checks whether there are any rows in the journal definitions table
   function is_filled($db) {
     $result = $db->query("SELECT id FROM Journal_definitions");
 
@@ -33,11 +36,10 @@ class Journal_definitions {
     return false;
   }
 
+  // Truncate the journal definitions table
   function clear($db) {
     $db->query("SET FOREIGN_KEY_CHECKS = 0");
     $db->query("TRUNCATE TABLE Journal_definitions");
     $db->query("SET FOREIGN_KEY_CHECKS = 1");
   }
 }
-
-?>

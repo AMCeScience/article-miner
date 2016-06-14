@@ -1,44 +1,51 @@
 <?php
 
-$config["journal_list_reinit"] = false;
-$config["journal_list_dir"] = "files/journal_categories.csv";
+  $config["journal_list_run"] = true;
+  $config["journal_list_reinit"] = false;
+  $config["journal_list_dir"] = "files/journal_categories.csv";
 
-$config["pubmed_central_list_reinit"] = false;
-$config["pubmed_central_dir"] = "pmc_result.xml";
+  $config["pubmed_central_run"] = true;
+  $config["pubmed_central_list_reinit"] = false;
+  $config["pubmed_central_dir"] = "pmc_result.xml";
 
-$config["pubmed_list_reinit"] = false;
-$config["pubmed_dir"] = "pubmed_result.xml";
+  $config["pubmed_run"] = true;
+  $config["pubmed_list_reinit"] = false;
+  $config["pubmed_dir"] = "pubmed_result.xml";
 
-$config["ovid_list_reinit"] = false;
-$config["ovid_dir"] = "ovid partials";
+  $config["ovid_run"] = true;
+  $config["ovid_list_reinit"] = false;
+  $config["ovid_dir"] = "ovid partials";
 
-$config["wos_list_reinit"] = false;
-$config["wos_dir"] = "wos partials";
+  $config["wos_run"] = true;
+  $config["wos_list_reinit"] = false;
+  $config["wos_dir"] = "wos partials";
 
-$config["scopus_list_reinit"] = true;
-$config["scopus_dir"] = "scopus partials";
+  $config["scopus_run"] = true;
+  $config["scopus_list_reinit"] = false;
+  $config["scopus_dir"] = "scopus partials";
 
-$config["dir"] = "files/full results/";
-$config["test_dir"] = "files/test folder/";
+  $config["dir"] = "files/full results/";
+  $config["test_dir"] = "files/test folder/";
 
-$config["test"] = false;
+  $config["test"] = true;
 
-$config["database"]["ip"] = "localhost";
-$config["database"]["username"] = "root";
-$config["database"]["password"] = "root";
-$config["database"]["schema"] = "mine_alchemy";
+  $config["database"]["ip"] = "localhost";
+  $config["database"]["username"] = "root";
+  $config["database"]["password"] = "root";
+  $config["database"]["schema"] = "miner_alchemy";
 
-$config["alchemy_key_dir"] = "/Users/Allard/workspace/miner/alchemyAPI/";
-$config["alchemy_reinit"] = false;
-$config["alchemy_transactions"] = 1;
-$config["alchemy_collect"] = array("taxonomy", "keywords", "entities", "concepts");
+  if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
+    $config["journal_list_reinit"] = true;
+    $config["pubmed_central_list_reinit"] = true;
+    $config["ovid_list_reinit"] = true;
+    $config["pubmed_list_reinit"] = true;
+    $config["wos_list_reinit"] = true;
+    $config["scopus_list_reinit"] = true;
+  }
 
-if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
-  $config["journal_list_reinit"] = true;
-  $config["pubmed_central_list_reinit"] = true;
-  $config["ovid_list_reinit"] = true;
-  $config["pubmed_list_reinit"] = true;
-  $config["wos_list_reinit"] = true;
-  $config["scopus_list_reinit"] = true;
-}
-?>
+  // Alchemy config
+  $config["alchemy_key_dir"] = "/Users/Allard/workspace/miner/alchemyAPI/";
+  $config["alchemy_reinit"] = false;
+  $config["alchemy_spending_transactions_per_run"] = 36;
+  $config["alchemy_safety_catch"] = 10;
+  $config["alchemy_collect"] = array("taxonomy", "keywords", "entities", "concepts");
