@@ -1,5 +1,21 @@
 <?php
 
+// Article Miner, a document parser for Pubmed, Pubmed Central, Ovid, Scopus, and Web of Science
+// Copyright (C) 2016 Allard van Altena
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 class AlchemyOutcomes {
   function insert_keyword($db, $keyword, $outcome_id) {
     $fixed = addslashes($keyword["text"]);
@@ -32,6 +48,7 @@ class AlchemyOutcomes {
     $db->query("INSERT INTO Alchemy_entities (type, relevance, count, text, outcome) VALUES ('$fixed', '{$entity["relevance"]}', '{$entity["count"]}', '$text_fixed', '$outcome_id')");
   }
 
+  // Get top 30 results for each of the Alchemy outcomes
   function statistics($db) {
     $result_concepts = $db->query("SELECT text, count(*) as count FROM Alchemy_concepts group by text order by count desc limit 30");
     $result_taxonomy = $db->query("SELECT label, count(*) as count FROM Alchemy_taxonomy where confident != 'no' group by label order by count desc limit 30");
@@ -41,6 +58,8 @@ class AlchemyOutcomes {
     return array("concepts" => $result_concepts, "taxonomy" => $result_taxonomy, "entities" => $result_entities, "keywords" => $result_keywords);
   }
 
+  // Breaks taxonomy into its components (i.e. split on '/')
+  // Groups components based on taxonomy tree, for full taxonomy category list see documentation: http://www.alchemyapi.com/api/taxonomy
   function taxonomy_outcomes_by_level($db) {
     return $db->query("SELECT *, AVG(score), COUNT(id) AS count, ROUND((LENGTH(label) - LENGTH(REPLACE(label, '/', '')))) AS level
       FROM Alchemy_taxonomy

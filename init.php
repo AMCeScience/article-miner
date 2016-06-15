@@ -1,78 +1,94 @@
 <?php
 
-  $time_start = microtime(true);
+// Article Miner, a document parser for Pubmed, Pubmed Central, Ovid, Scopus, and Web of Science
+// Copyright (C) 2016 Allard van Altena
 
-  require_once("config.php");
-  require_once("database.php");
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 
-  $db = new Connector();
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
 
-  $db->connect($config);
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-  if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
-    // Reset database
-    require_once("models/journal_definitions.php");
-    require_once("models/journals.php");
-    require_once("models/articles.php");
-    require_once("models/outcomes.php");
-    require_once("models/alchemy_outcomes.php");
-    
-    $definitions_model = new Journal_definitions();
-    $journal_model = new Journals();
-    $article_model = new Articles();
-    $outcomes_model = new Outcomes();
-    $alchemy_outcomes_model = new AlchemyOutcomes();
+$time_start = microtime(true);
 
-    // Clear tables
-    $definitions_model->clear($db);
-    $journal_model->clear($db);
-    $article_model->clear($db);
-    $outcomes_model->clear($db);
-    $alchemy_outcomes_model->clear($db);
-  }
+require_once("config.php");
+require_once("database.php");
 
-  // Parsing the journal list csv file
-  if ($config["journal_list_run"] === true) {
-    require_once("parsers/parse_journal_list.php");
+$db = new Connector();
 
-    new Journal_list($config, $db);
-  }
+$db->connect($config);
 
-  // Parsing pubmed central XML
-  if ($config["pubmed_central_run"] === true) {
-    require_once("parsers/pubmed_central_xml.php");
+if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
+  // Reset database
+  require_once("models/journal_definitions.php");
+  require_once("models/journals.php");
+  require_once("models/articles.php");
+  require_once("models/outcomes.php");
+  require_once("models/alchemy_outcomes.php");
+  
+  $definitions_model = new Journal_definitions();
+  $journal_model = new Journals();
+  $article_model = new Articles();
+  $outcomes_model = new Outcomes();
+  $alchemy_outcomes_model = new AlchemyOutcomes();
 
-    new Pubmed_central_parser($config, $db);
-  }
+  // Clear tables
+  $definitions_model->clear($db);
+  $journal_model->clear($db);
+  $article_model->clear($db);
+  $outcomes_model->clear($db);
+  $alchemy_outcomes_model->clear($db);
+}
 
-  // Parsing Ovid XML
-  if ($config["ovid_run"] === true) {
-    require_once("parsers/ovid_xml.php");
+// Parsing the journal list csv file
+if ($config["journal_list_run"] === true) {
+  require_once("parsers/parse_journal_list.php");
 
-    new Ovid_parser($config, $db);
-  }
+  new Journal_list($config, $db);
+}
 
-  // Parsing Pubmed XML
-  if ($config["pubmed_run"] === true) {
-    require_once("parsers/pubmed_xml.php");
+// Parsing pubmed central XML
+if ($config["pubmed_central_run"] === true) {
+  require_once("parsers/pubmed_central_xml.php");
 
-    new Pubmed_parser($config, $db);
-  }
+  new Pubmed_central_parser($config, $db);
+}
 
-  // Parsing Web of Science/Web of Knowledge tab delimited file
-  if ($config["wos_run"] === true) {
-    require_once("parsers/webofscience_tab.php");
+// Parsing Ovid XML
+if ($config["ovid_run"] === true) {
+  require_once("parsers/ovid_xml.php");
 
-    new WoS_parser($config, $db);
-  }
+  new Ovid_parser($config, $db);
+}
 
-  // Parsing Scopus CSV
-  if ($config["scopus_run"] === true) {
-    require_once("parsers/scopus_csv.php");
+// Parsing Pubmed XML
+if ($config["pubmed_run"] === true) {
+  require_once("parsers/pubmed_xml.php");
 
-    new Scopus_parser($config, $db);
-  }
+  new Pubmed_parser($config, $db);
+}
 
-  echo "Time elapsed: " . (microtime(true) - $time_start) . "s <br/>";
+// Parsing Web of Science/Web of Knowledge tab delimited file
+if ($config["wos_run"] === true) {
+  require_once("parsers/webofscience_tab.php");
 
-  echo "<a href='/index.php'>Back to index page</a>";
+  new WoS_parser($config, $db);
+}
+
+// Parsing Scopus CSV
+if ($config["scopus_run"] === true) {
+  require_once("parsers/scopus_csv.php");
+
+  new Scopus_parser($config, $db);
+}
+
+echo "Time elapsed: " . (microtime(true) - $time_start) . "s <br/>";
+
+echo "<a href='/index.php'>Back to index page</a>";
