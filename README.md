@@ -1,6 +1,6 @@
 # Article Miner
 
-A article parser for publication databases, when using the database's API is unfeasible.
+An article parser for publication databases, when using the database's API is unfeasible.
 Takes the output formats of publication databases as input and stores their articles in a local MySQL database for futher processing, currently the following databases and formats are supported:
 - Pubmed (XML)
 - Pubmed Central (XML)
