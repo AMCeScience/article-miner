@@ -16,6 +16,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+// _run: should this parser be executed during a normal run
+// _reinit: if the parser has run before, should the database be cleared and the parser run again
+// _dir: location of the input files for the parser
+
 $config["journal_list_run"] = true;
 $config["journal_list_reinit"] = false;
 $config["journal_list_dir"] = "files/journal_categories.csv";
@@ -40,9 +44,12 @@ $config["scopus_run"] = true;
 $config["scopus_list_reinit"] = false;
 $config["scopus_dir"] = "scopus partials";
 
+// File dir, appended to every _dir listed above
 $config["dir"] = "files/full results/";
+// File dir for test mode, appended to every _dir listed above
 $config["test_dir"] = "files/test folder/";
 
+// Set test mode
 $config["test"] = true;
 
 $config["database"]["ip"] = "localhost";
