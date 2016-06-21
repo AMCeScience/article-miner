@@ -39,124 +39,138 @@ class Pubmed_central_parser {
 
     $xml_parser = new XML_parser();
 
-    // Open the XML file
-    if (($handle = @fopen($folder, "r")) === false) {
-      echo "Error: XML file not found at: " . $folder;
+    $scanned_directory = array_diff(scandir($folder), array('..', '.'));
+
+    if (!isset($scanned_directory)) {
+      echo "Warning: no files found in: " . $folder . '<br/>';
 
       return;
     }
 
-    // Get the nodestring incrementally from the xml file by defining a callback
-    $articles = $xml_parser->nodeStringFromXMLFile($handle, "<article", "</article>", $db, function($xml_parser, $db, $nodeText) {
-      $simpleXML = simplexml_load_string($nodeText);
+    $articles = array();
 
-      // Title
-      $title = "";
+    foreach($scanned_directory as $file) {
+      // Open the file
+      if (($handle = @fopen($folder . "/" . $file, "r")) === false) {
+        echo "Error: file not found at: " . $folder . "/" . $file;
 
-      $result = $simpleXML->xpath('//title-group/article-title');
-      if (isset($result[0])) {
-        $title = (string) $result[0];
-      }
-      
-      // Abstract
-      $abstract = "";
-
-      $result = $simpleXML->xpath('//abstract');
-      
-      if (isset($result[0])) {
-        // Abstract contain HTML tags for some reason
-        // Revert to plain XML string
-        $xml = $result[0]->asXML();
-        // Remove the tags
-        $no_tags = trim(strip_tags($xml));
-        
-        // Remove any extra whitespace
-        $abstract = preg_replace('/(\s)+/', ' ', $no_tags);
+        return;
       }
 
-      // Keywords
-      $keywords = array();
+      // Get the nodestring incrementally from the xml file by defining a callback
+      $articles = $xml_parser->nodeStringFromXMLFile($handle, "<article", "</article>", $db, function($xml_parser, $db, $nodeText) {
+        $simpleXML = simplexml_load_string($nodeText);
 
-      $result = $simpleXML->xpath('//kwd-group/kwd');
-      while(list( , $keyword) = each($result)) {
-        array_push($keywords, (string) $keyword);
-      }
+        // Title
+        $title = "";
 
-      // Journal-Title
-      $journal_title = "";
-
-      $result = $simpleXML->xpath('//journal-title');
-      if (isset($result[0])) {
-        $journal_title = (string) $result[0];
-      }
-
-      // Journal-ISO
-      $journal_iso = "";
-
-      $result = $simpleXML->xpath('//journal-meta/journal-id[@journal-id-type="iso-abbrev"]');
-      if (isset($result[0])) {
-        $journal_iso = (string) $result[0];  
-      }      
-
-      // ISSN
-      $issn = "";
-
-      $result = $simpleXML->xpath('//issn[@pub-type="ppub"]');
-      if (isset($result[0])) {
-        $issn = (string) $result[0];
-      }
-
-      // DOI
-      $doi = "";
-
-      $result = $simpleXML->xpath('//article-meta/article-id[@pub-id-type="doi"]');
-      if (isset($result[0])) {
-        $doi = (string) $result[0];
-
-        $pattern = '/[0-9\.]+\/.*/';
-
-        preg_match($pattern, $doi, $match);
-
-        if (count($match) > 0) {
-          $doi = $match[0];
-        } else {
-          $doi = "";
+        $result = $simpleXML->xpath('//title-group/article-title');
+        if (isset($result[0])) {
+          $title = (string) $result[0];
         }
-      }
+        
+        // Abstract
+        $abstract = "";
 
-      // Publication date
-      $day = "";
+        $result = $simpleXML->xpath('//abstract');
+        
+        if (isset($result[0])) {
+          foreach ($result as $item) {
+            // Abstract contain HTML tags for some reason
+            // Revert to plain XML string
+            $xml = $item->asXML();
+            // Remove the tags
+            $no_tags = trim(strip_tags($xml));
+            
+            // Remove any extra whitespace
+            $abstract .= ' ' . preg_replace('/(\s)+/', ' ', $no_tags);
+          }
+        }
 
-      $result = $simpleXML->xpath('//pub-date/day');
-      if (isset($result[0])) {
-        $day = (string) $result[0];
-      }
+        // Keywords
+        $keywords = array();
 
-      $month = "";
+        $result = $simpleXML->xpath('//kwd-group/kwd');
+        while(list( , $keyword) = each($result)) {
+          array_push($keywords, (string) $keyword);
+        }
 
-      $result = $simpleXML->xpath('//pub-date/month');
-      if (isset($result[0])) {
-        $month = (string) $result[0];
-      }
+        // Journal-Title
+        $journal_title = "";
 
-      $year = "";
+        $result = $simpleXML->xpath('//journal-title');
+        if (isset($result[0])) {
+          $journal_title = (string) $result[0];
+        }
 
-      $result = $simpleXML->xpath('//pub-date/year');
-      if (isset($result[0])) {
-        $year = (string) $result[0];
-      }
+        // Journal-ISO
+        $journal_iso = "";
 
-      return array("title" => $title, "abstract" => $abstract, "doi" => $doi, "journal_title" => $journal_title, "journal_iso" => $journal_iso, "journal_issn" => $issn, "day" => $day, "month" => $month, "year" => $year);
-    });
+        $result = $simpleXML->xpath('//journal-meta/journal-id[@journal-id-type="iso-abbrev"]');
+        if (isset($result[0])) {
+          $journal_iso = (string) $result[0];  
+        }      
 
-    fclose($handle);
+        // ISSN
+        $issn = "";
+
+        $result = $simpleXML->xpath('//issn[@pub-type="ppub"]');
+        if (isset($result[0])) {
+          $issn = (string) $result[0];
+        }
+
+        // DOI
+        $doi = "";
+
+        $result = $simpleXML->xpath('//article-meta/article-id[@pub-id-type="doi"]');
+        if (isset($result[0])) {
+          $doi = (string) $result[0];
+
+          $pattern = '/[0-9\.]+\/.*/';
+
+          preg_match($pattern, $doi, $match);
+
+          if (count($match) > 0) {
+            $doi = $match[0];
+          } else {
+            $doi = "";
+          }
+        }
+
+        // Publication date
+        $day = "";
+
+        $result = $simpleXML->xpath('//pub-date/day');
+        if (isset($result[0])) {
+          $day = (string) $result[0];
+        }
+
+        $month = "";
+
+        $result = $simpleXML->xpath('//pub-date/month');
+        if (isset($result[0])) {
+          $month = (string) $result[0];
+        }
+
+        $year = "";
+
+        $result = $simpleXML->xpath('//pub-date/year');
+        if (isset($result[0])) {
+          $year = (string) $result[0];
+        }
+
+        return array("title" => $title, "abstract" => $abstract, "doi" => $doi, "journal_title" => $journal_title, "journal_iso" => $journal_iso, "journal_issn" => $issn, "day" => $day, "month" => $month, "year" => $year);
+      });
+
+      fclose($handle);
+    }
 
     require_once("models/articles.php");
     
     $article_model = new Articles();
     
     foreach ($articles as $article) {
-      $article_model->insert($db, $article, 'pmc');
+      $article_model->insert($db, $article, 'pubmed_central');
     }
   }
 }

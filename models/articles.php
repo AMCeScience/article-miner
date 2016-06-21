@@ -50,6 +50,18 @@ class Articles {
     return false;
   }
 
+  function find_by_stripped_title($db, $title_stripped) {
+    $title_trimmed = trim($title_stripped);
+
+    $result = $db->query("SELECT * FROM Articles WHERE title_stripped LIKE '%{$title_trimmed}%' AND abstract != ''");
+
+    if ($result) {
+      return $result;
+    }
+
+    return false;
+  }
+
   // Get titles (stripped of all characters other than a-z) and DOIs of all articles in DB
   // Also, count available (i.e. non-empty) titles and DOIs
   function get_titles_and_dois($db) {
@@ -105,6 +117,10 @@ class Articles {
     }
 
     return false;
+  }
+
+  function delete_by_db($db, $db_name) {
+    $db->query("DELETE FROM Articles WHERE search_db = '$db_name'");
   }
 
   // Delete (an) article(s)

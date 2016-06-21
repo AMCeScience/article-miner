@@ -29,6 +29,10 @@ class Run_check {
 
     // Check whether this is a re-initialisation of the DB, or the DB is empty, or the script has not run yet
     if ($config[$reinit_string] || !$article_model->is_filled($db) || !$script_model->has_ran($db, $script_name)) {
+      if ($config[$reinit_string] && !$article_model->is_filled($db)) {
+        $article_model->delete_by_db($db, $script_name);
+      }
+
       // Run the script (again)
       echo "Reinitializing the {$script_name} list... ";
       

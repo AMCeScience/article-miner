@@ -40,12 +40,18 @@ class Scopus_parser {
 
     $scanned_directory = array_diff(scandir($folder), array('..', '.'));
 
+    if (!isset($scanned_directory)) {
+      echo "Warning: no files found in: " . $folder . '<br/>';
+
+      return;
+    }
+
     $articles = array();
 
     foreach($scanned_directory as $file) {
       // Open the file
       if (($handle = @fopen($folder . "/" . $file, "r")) === false) {
-        echo "Error: file not found at: " . $folder . "/" . $file;
+        echo "Warning: file not found at: " . $folder . "/" . $file;
 
         return;
       }

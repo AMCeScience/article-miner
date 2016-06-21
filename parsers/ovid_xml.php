@@ -38,8 +38,14 @@ class Ovid_parser {
     require_once("libraries/parse_large_xml.php");
 
     $xml_parser = new XML_parser();
-
+    
     $scanned_directory = array_diff(scandir($folder), array('..', '.'));
+    
+    if (!isset($scanned_directory)) {
+      echo "Warning: no files found in: " . $folder . '<br/>';
+
+      return;
+    }
 
     require_once("models/articles.php");
     
@@ -48,7 +54,7 @@ class Ovid_parser {
     foreach($scanned_directory as $file) {
       // Open the XML
       if (($handle = @fopen($folder . "/" . $file, "r")) === false) {
-        echo "Error: XML file not found at: " . $folder . "/" . $file;
+        echo "Warning: XML file not found at: " . $folder . "/" . $file;
 
         return;
       }
@@ -76,14 +82,16 @@ class Ovid_parser {
         $result = $simpleXML->xpath('//F[@L="Abstract"]/D');
         
         if (isset($result[0])) {
-          // Abstract contain HTML tags for some reason
-          // Revert to plain XML string
-          $xml = $result[0]->asXML();
-          // Remove the tags
-          $no_tags = trim(strip_tags($xml));
-          
-          // Remove any extra whitespace
-          $abstract = preg_replace('/(\s)+/', ' ', $no_tags);
+          foreach ($result as $item) {
+            // Abstract contain HTML tags for some reason
+            // Revert to plain XML string
+            $xml = $item->asXML();
+            // Remove the tags
+            $no_tags = trim(strip_tags($xml));
+            
+            // Remove any extra whitespace
+            $abstract .= ' ' . preg_replace('/(\s)+/', ' ', $no_tags);
+          }
         }
 
         // Journal-Title
