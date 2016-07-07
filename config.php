@@ -20,37 +20,37 @@
 // _reinit: if the parser has run before, should the database be cleared and the parser run again
 // _dir: location of the input files for the parser
 
-$config["journal_list_run"] = true;
+$config["journal_list_run"] = false;
 $config["journal_list_reinit"] = false;
 $config["journal_list_dir"] = "files/journal_categories.csv";
 
-$config["pubmed_central_run"] = true;
+$config["pubmed_central_run"] = false;
 $config["pubmed_central_list_reinit"] = false;
-$config["pubmed_central_dir"] = "pmc_result.xml";
+$config["pubmed_central_dir"] = "pubmed central";
 
-$config["pubmed_run"] = true;
+$config["pubmed_run"] = false;
 $config["pubmed_list_reinit"] = false;
-$config["pubmed_dir"] = "pubmed_result.xml";
+$config["pubmed_dir"] = "pubmed";
 
 $config["ovid_run"] = true;
-$config["ovid_list_reinit"] = false;
-$config["ovid_dir"] = "ovid partials";
+$config["ovid_list_reinit"] = true;
+$config["ovid_dir"] = "ovid";
 
-$config["wos_run"] = true;
+$config["wos_run"] = false;
 $config["wos_list_reinit"] = false;
-$config["wos_dir"] = "wos partials";
+$config["wos_dir"] = "web of science";
 
-$config["scopus_run"] = true;
+$config["scopus_run"] = false;
 $config["scopus_list_reinit"] = false;
-$config["scopus_dir"] = "scopus partials";
+$config["scopus_dir"] = "scopus";
 
 // File dir, appended to every _dir listed above
-$config["dir"] = "files/full results/";
+$config["dir"] = "files/sysrev/";
 // File dir for test mode, appended to every _dir listed above
-$config["test_dir"] = "files/test folder/";
+$config["test_dir"] = "files/test folder/sysrev/";
 
 // Set test mode
-$config["test"] = true;
+$config["test"] = false;
 
 $config["database"]["ip"] = "localhost";
 $config["database"]["username"] = "root";
