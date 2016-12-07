@@ -48,6 +48,14 @@ class Journals {
     // Find existing journal
     $existing_journal = $this->find($db, $title, $iso, $issn);
 
+    if ($existing_journal && $existing_journal["issn"] == '' && $issn != '') {
+      $this->update($db, $existing_journal["id"], $existing_journal["title"], $existing_journal["iso"], $issn);
+    }
+
+    if ($existing_journal && $existing_journal["iso"] == '' && $iso != '') {
+      $this->update($db, $existing_journal["id"], $existing_journal["title"], $iso, $existing_journal["issn"]);
+    }
+
     // If journal already exists in DB, return the id
     if ($existing_journal) {
       return $existing_journal["id"];
@@ -59,7 +67,7 @@ class Journals {
     if ($result = $db->query("INSERT INTO Journals (title, iso, issn) VALUES ('$title_fixed', '$iso', '$issn')")) {
       $journal_id = $db->connection->insert_id;
 
-      include("config.php");
+      include("../config.php");
       
       // Check if journal list is set in config
       if ($config["journal_list_run"] === true) {
@@ -78,6 +86,39 @@ class Journals {
     }
 
     return false;
+  }
+
+  function get_relevant_journals($db) {
+    $query = "SELECT count(a.id) AS count, j.id, j.title, j.issn
+      FROM articles a
+      JOIN journals j ON a.journal = j.id
+      WHERE a.abstract != ''
+      GROUP BY a.journal
+      #having count(a.id) > 9
+      ORDER BY count DESC";
+
+    if ($result = $db->query($query)) {
+      return $result;
+    }
+
+    return false;
+  }
+
+  function get_pubmed_journals($db) {
+    $query = "SELECT DISTINCT(journal_id) FROM Pubmed_articles";
+
+    if ($result = $db->query($query)) {
+      return $result;
+    }
+
+    return false;
+  }
+
+  function update($db, $id, $title, $iso = "", $issn = "") {
+    // Insert journal
+    $title_fixed = addslashes($title);
+    
+    $db->query("UPDATE Journals SET title = '$title_fixed', iso = '$iso', issn = '$issn' WHERE id = $id");
   }
 
   // Truncate the journals table

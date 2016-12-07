@@ -59,4 +59,22 @@ CREATE TABLE `Scripts_ran` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE `Keywords` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `keyword` varchar(45) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `keyword` (`keyword`)
+) ENGINE=InnoDB AUTO_INCREMENT=4659 DEFAULT CHARSET=utf8;
+
+CREATE TABLE `Keywords_to_articles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `article` int(11) NOT NULL,
+  `keyword` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `keyword_idx` (`keyword`),
+  KEY `article_link` (`article`),
+  CONSTRAINT `article_link` FOREIGN KEY (`article`) REFERENCES `Articles` (`id`) ON UPDATE NO ACTION,
+  CONSTRAINT `keyword` FOREIGN KEY (`keyword`) REFERENCES `Keywords` (`id`) ON UPDATE NO ACTION
+) ENGINE=InnoDB AUTO_INCREMENT=4659 DEFAULT CHARSET=utf8;
+
 SET FOREIGN_KEY_CHECKS = 1;

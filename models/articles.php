@@ -39,6 +39,21 @@ class Articles {
     return 0;
   }
 
+  function find_by_journal($db, $journal_id) {
+    $result = $db->query("SELECT * 
+      FROM Articles AS a 
+      JOIN Journals AS j ON a.journal = j.id
+      WHERE j.issn = '{$journal_id}'
+        OR j.title = '{$journal_id}'
+    ");
+
+    if ($result) {
+      return $result;
+    }
+
+    return false;
+  }
+
   // Get an article by its id
   function find_by_id($db, $id) {
     $result = $db->query("SELECT * FROM Articles WHERE id = $id");
@@ -113,7 +128,62 @@ class Articles {
     if ($result = $db->query($sql)) {
       $article_id = $db->connection->insert_id;
 
+      // require_once("keywords.php");
+
+      // $keyword_model = new Keywords();
+
+      // // Insert keywords
+      // foreach ($article["keywords"] as $keyword) {
+      //   $keyword_model->insert($db, $keyword, $article_id);
+      // }
+
       return $article_id;
+    }
+
+    return false;
+  }
+
+  function pubmed_id_exists($db, $pubmed_id) {
+    $sql = "SELECT COUNT(*) AS count FROM Pubmed_articles WHERE pubmed_id = {$pubmed_id}";
+
+    if ($result = $db->query($sql)) {
+      $data_array = $result->fetch_array();
+
+      return $data_array['count'] > 0;
+    }
+
+    return false;
+  }
+
+  function insert_pubmed_ids($db, $pubmed_ids, $journal_id) {
+    if (!is_array($pubmed_ids)) {
+      $pubmed_ids = array($pubmed_ids);
+    }
+
+    $pubmed_ids = array_unique($pubmed_ids);
+
+    foreach($pubmed_ids as $key => $pubmed_id) {
+      if ($this->pubmed_id_exists($db, $pubmed_id)) {
+        unset($pubmed_ids[$key]);
+      }
+    }
+
+    $query = array();
+
+    foreach ($pubmed_ids as $pubmed_id) {
+      $query[] = "'" . $pubmed_id . "','" . $journal_id . "'";
+    }
+
+    if (count($pubmed_ids) > 0) {
+      $db->query("INSERT INTO Pubmed_articles (pubmed_id, journal_id) VALUES (" . implode("),(", $query) . ")");
+    }
+  }
+
+  function get_pubmed_ids($db, $journal_id) {
+    $sql = "SELECT * FROM Pubmed_articles WHERE journal_id = {$journal_id}";
+
+    if ($result = $db->query($sql)) {
+      return $result;
     }
 
     return false;
@@ -126,6 +196,14 @@ class Articles {
   // Delete (an) article(s)
   // Takes either a single id or array of ids as input
   function delete($db, $ids) {
+    require_once("keywords.php");
+
+    $keyword_model = new Keywords();
+
+    foreach($ids as $article_id) {
+      $keyword_model->delete_by_article($db, $article_id);
+    }
+
     $ids = implode(",", $ids);
 
     $db->query("DELETE FROM Articles WHERE id IN ($ids)");

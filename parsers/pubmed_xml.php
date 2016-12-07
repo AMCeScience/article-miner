@@ -59,7 +59,11 @@ class Pubmed_parser {
 
       // Get the nodestring incrementally from the xml file by defining a callback
       $articles = $xml_parser->nodeStringFromXMLFile($handle, "<PubmedArticle>", "</PubmedArticle>", $db, function($xml_parser, $db, $nodeText) {
-        $simpleXML = simplexml_load_string($nodeText);
+        $simpleXML = simplexml_load_string($nodeText, 'SimpleXMLElement', LIBXML_NOWARNING);
+
+        if (!$simpleXML) {
+          return;
+        }
 
         // Title
         $title = "";
@@ -75,17 +79,25 @@ class Pubmed_parser {
         $result = $simpleXML->xpath('//Abstract/AbstractText');
 
         if (isset($result[0])) {
-            foreach ($result as $item) {
-              // Abstract contain HTML tags for some reason
-              // Revert to plain XML string
-              $xml = $item->asXML();
-              // Remove the tags
-              $no_tags = trim(strip_tags($xml));
-              
-              // Remove any extra whitespace
-              $abstract .= ' ' . preg_replace('/(\s)+/', ' ', $no_tags);
-            }
+          foreach ($result as $item) {
+            // Abstract contain HTML tags for some reason
+            // Revert to plain XML string
+            $xml = $item->asXML();
+            // Remove the tags
+            $no_tags = trim(strip_tags($xml));
+            
+            // Remove any extra whitespace
+            $abstract .= ' ' . preg_replace('/(\s)+/', ' ', $no_tags);
           }
+        }
+
+        $result = $simpleXML->xpath('//KeywordList/Keyword');
+
+        $keywords = array();
+
+        while(list( , $keyword) = each($result)) {
+          array_push($keywords, (string) $keyword);
+        }
 
         // Journal-Title
         $journal_title = "";
@@ -150,8 +162,16 @@ class Pubmed_parser {
         if (isset($result[0])) {
           $year = (string) $result[0];
         }
+        
+        if ($year === "") {
+          $result = $simpleXML->xpath('//PubmedData/History/PubMedPubDate[@PubStatus="medline"]/Year');
+          
+          if (isset($result[0])) {
+            $year = (string) $result[0];
+          }
+        }
 
-        return array("title" => $title, "abstract" => $abstract, "doi" => $doi, "journal_title" => $journal_title, "journal_iso" => $journal_iso, "journal_issn" => $issn, "day" => $day, "month" => $month, "year" => $year);
+        return array("title" => $title, "abstract" => $abstract, "doi" => $doi, "journal_title" => $journal_title, "journal_iso" => $journal_iso, "journal_issn" => $issn, "day" => $day, "month" => $month, "year" => $year, "keywords" => $keywords);
       });
 
       fclose($handle);

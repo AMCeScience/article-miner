@@ -26,20 +26,41 @@ $db = new Connector();
 
 $db->connect($config);
 
+// Filter articles with an empty abstract
+$where = ' WHERE abstract != ""';
+
+if (count($config['exclude_journal_issn']) > 0) {
+	$where .= ' AND j.issn NOT IN ("' . implode('", "', $config['exclude_journal_issn']) . '")';
+}
+
+if (count($config['exclude_journal_id']) > 0) {
+	$where .= ' AND j.id NOT IN ("' . implode('", "', $config['exclude_journal_id']) . '")';
+}
+
 // Get articles from DB
-$articles = $db->query("SELECT * FROM Articles");
+$articles = $db->query("SELECT a.title, a.abstract 
+	FROM Articles AS a
+	JOIN Journals AS j ON a.journal = j.id"
+	. $where
+);
 
 $output = array();
 
 while ($article = $articles->fetch_array()) {
-  // Filter articles with an empty abstract
-  if ($article["abstract"] != "") {
-    // Filter any non characters, retain a-z, - and spaces
-    // Merge title and abstract into one CSV row
-    $text = preg_replace("/[^a-zA-Z'\-\ ]/", "", $article["title"] . " " . $article["abstract"]);
+	// Filter any non characters, retain a-z, - and spaces
+	// Merge title and abstract into one CSV row
+	$text = preg_replace("/[^a-zA-Z'\-\ ]/", "", $article["title"] . " " . $article["abstract"]);
+	// Replace dashes within words with underscores
+	$text = preg_replace("/(?<=\w)(-)(?=\w)/", "_", $text);
+	// Replace double dashes with a space
+	$text = preg_replace("/--/", " ", $text);
+	// Remove single slashes that do not connect two words
+	$text = preg_replace("/-/", "", $text);
 
-    array_push($output, $text);
-  }
+	//$text = preg_replace("/(\.\ )/", " ", $article["title"] . " " . $article["abstract"]);
+	//$text = preg_replace("/(\.$|,|;)/", "", $text);
+
+	array_push($output, $text);
 }
 
 // Echo output as CSV

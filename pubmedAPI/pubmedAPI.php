@@ -19,8 +19,8 @@ class PubMedAPI {
   // Search mode, either search (query the API) or fetch (retrieve articles from API)
   private $search_mode = 'search';
   // API url strings
-  private $esearch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?';
-  private $efetch = 'http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?';
+  private $esearch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?';
+  private $efetch = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?';
 
   private $search_data_type = '';
   private $search_params = array();
@@ -29,7 +29,7 @@ class PubMedAPI {
   private $search_url_params = '';
 
   // Used for debugging, prints request url for API
-  private $show_urls = true;
+  public $show_urls = true;
 
   // Available modes used for displaying data or returning data
   // Display mode:
@@ -76,7 +76,7 @@ class PubMedAPI {
     $this->_build_url_params();
 
     // Get the data
-    $results = $this->_retrieve_data();    
+    $results = $this->_retrieve_data();
     
     // Return data
     $retrieved = count($results->ids);
@@ -195,7 +195,7 @@ class PubMedAPI {
 
   private function _get_url() {
     if ($this->show_urls === true) {
-      echo $this->search_url . $this->search_url_params;
+      echo $this->search_url . $this->search_url_params . '<br/>';
     }
 
     return $this->search_url . $this->search_url_params;
@@ -281,16 +281,20 @@ class PubMedAPI {
 }
 
 class Search_data {
-  public $raw;
-  public $ids;
-  public $total_number_of_results;
-  public $query_translation;
+  public $raw = null;
+  public $ids = array();
+  public $total_number_of_results = 0;
+  public $query_translation = '';
 
   function __construct($raw = null) {
     $this->raw = $raw;
 
     if (isset($this->raw)) {
-      return $this->_detect_type();
+      try {
+        return $this->_detect_type();
+      } catch (Exception $e) {
+        return $this;
+      }
     }
   }
 
@@ -377,10 +381,9 @@ class Fetch_data {
 
       $id = $medline_citation->PMID;
       $article_data = $medline_citation->Article;
-      $mesh_data = $medline_citation->MeshHeadingList;
+      $keyword_list = $medline_citation->KeywordList;
 
-      // Authors array contains concatendated LAST NAME + INITIALS
-      // TODO: whats going on eh'?
+      // Authors array contains concatenated LAST NAME + INITIALS
       $authors = array();
       if (isset($article_data->AuthorList->Author)) {
         try {
@@ -395,17 +398,9 @@ class Fetch_data {
 
       // Keywords array
       $keywords = array();
-      if (isset($mesh_data->MeshHeading)) {
-        foreach ($mesh_data->MeshHeading as $mesh_heading) {
-          $keywords[] = (string) $mesh_heading->DescriptorName;
-
-          if (isset($mesh_heading->QualifierName)) {
-            if (is_array($mesh_heading->QualifierName)) {
-              $keywords = array_merge($keywords, $mesh_heading->QualifierName);
-            } else {
-              $keywords[] = (string) $mesh_heading->QualifierName;
-            }
-          }
+      if (isset($keyword_list->Keyword)) {
+        foreach ($keyword_list->Keyword as $keyword) {
+          $keywords[] = (string) $keyword;
         }
       }
 
@@ -416,17 +411,17 @@ class Fetch_data {
           $articleid[] = $id;
         }
       }
-
+      
       $this->articles[] = new Fetch_article(
         (string) $id,
         (string) $article_data->Journal->JournalIssue->Volume,
         (string) $article_data->Journal->JournalIssue->Issue,
         (string) $article_data->Journal->JournalIssue->PubDate->Year,
         (string) $article_data->Journal->JournalIssue->PubDate->Month,
+        (string) $article_data->ELocationID,
         (string) $article_data->Journal->ISSN,
         (string) $article_data->Journal->Title,
         (string) $article_data->Journal->ISOAbbreviation,
-        (string) $article_data->Pagination->MedlinePgn,
         (string) $article_data->ArticleTitle,
         (string) $article_data->Abstract->AbstractText,
         (string) $article_data->Affiliation,
@@ -446,7 +441,7 @@ class Fetch_article {
   public $issue;
   public $year;
   public $month;
-  public $pages;
+  public $doi;
   public $issn;
   public $journal;
   public $journalabbrev;
@@ -457,13 +452,13 @@ class Fetch_article {
   public $articleid;
   public $keywords;
 
-  function __construct($pmid, $volume, $issue, $year, $month, $pages, $issn, $journal, $journalabbrev, $title, $abstract, $affiliation, $authors, $articleid, $keywords) {
+  function __construct($pmid, $volume, $issue, $year, $month, $doi, $issn, $journal, $journalabbrev, $title, $abstract, $affiliation, $authors, $articleid, $keywords) {
     $this->pmid = $pmid;
     $this->volume = $volume;
     $this->issue = $issue;
     $this->year = $year;
     $this->month = $month;
-    $this->pages = $pages;
+    $this->doi = $doi;
     $this->issn = $issn;
     $this->journal = $journal;
     $this->journalabbrev = $journalabbrev;
