@@ -1,3 +1,5 @@
 alchemyAPI/api_key.txt
 files/*
 /vendor/
+/nbproject/private/
+/nbproject

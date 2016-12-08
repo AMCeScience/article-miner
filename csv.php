@@ -29,19 +29,20 @@ $db->connect($config);
 // Filter articles with an empty abstract
 $where = ' WHERE abstract != ""';
 
-if (count($config['exclude_journal_issn']) > 0) {
-	$where .= ' AND j.issn NOT IN ("' . implode('", "', $config['exclude_journal_issn']) . '")';
-}
-
-if (count($config['exclude_journal_id']) > 0) {
-	$where .= ' AND j.id NOT IN ("' . implode('", "', $config['exclude_journal_id']) . '")';
-}
+//if (count($config['exclude_journal_issn']) > 0) {
+//	$where .= ' AND j.issn NOT IN ("' . implode('", "', $config['exclude_journal_issn']) . '")';
+//}
+//
+//if (count($config['exclude_journal_id']) > 0) {
+//	$where .= ' AND j.id NOT IN ("' . implode('", "', $config['exclude_journal_id']) . '")';
+//}
 
 // Get articles from DB
-$articles = $db->query("SELECT a.title, a.abstract 
+$articles = $db->query("SELECT a.title, a.abstract, a.search_db
 	FROM Articles AS a
 	JOIN Journals AS j ON a.journal = j.id"
-	. $where
+	. $where .
+    "ORDER BY search_db"
 );
 
 $output = array();

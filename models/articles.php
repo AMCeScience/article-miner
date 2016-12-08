@@ -193,6 +193,12 @@ class Articles {
     $db->query("DELETE FROM Articles WHERE search_db = '$db_name'");
   }
 
+  function delete_inverse_ids($db, $ids, $journal_id, $search_db) {
+      $ids = implode(",", $ids);
+      
+      $db->query("DELETE FROM Articles WHERE journal = {$journal_id} AND id NOT IN ({$ids}) AND search_db = '{$search_db}'");
+  }
+  
   // Delete (an) article(s)
   // Takes either a single id or array of ids as input
   function delete($db, $ids) {

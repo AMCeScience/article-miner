@@ -28,6 +28,9 @@ class Connector {
       
       return false;
     }
+    
+    // Force connection to UTF-8
+    $this->query("SET NAMES utf8;");
         
     return $this->connection;
   }
