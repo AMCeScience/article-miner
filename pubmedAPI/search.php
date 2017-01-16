@@ -16,22 +16,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-error_reporting(E_ALL);
+include('PubMedAPI.php');
+include('../config.php');
+include('../models/articles.php');
+require_once('../database.php');
+require_once('search_ctrl.php');
 
-$time_start = microtime(true);
+$db = new Connector();
 
-require_once('controllers/init.php');
+$db->connect($config);
 
-$init = new Init();
+$article_model = new Articles();
 
-$reinit = false;
+$pubMedAPI = new PubMedAPI();
+$pubMedAPI->limit = 50;
+$pubMedAPI->show_urls = false;
+$pubMedAPI->display_mode = false;
+$pubMedAPI->return_mode = 'parsed';
 
-if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
-  $reinit = true;
-}
-
-$init->run($reinit);
-
-echo "Time elapsed: " . (microtime(true) - $time_start) . "s <br/>";
+$retriever = new PubMedIDRetriever($db, $article_model, $pubMedAPI, $config['exclude_journal_array']);
+$retriever->run();
 
 echo "<a href='/index.php'>Back to index page</a>";

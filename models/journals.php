@@ -22,15 +22,19 @@ class Journals {
   function find($db, $title, $iso = "", $issn = "") {
     $title_fixed = addslashes($title);
 
-    $sql = "SELECT * FROM Journals WHERE title LIKE '%$title_fixed%'";
+    $sql = "SELECT * FROM Journals WHERE title = '$title_fixed'";
 
     if (strlen($iso) > 0) {
-      $sql .= " OR iso LIKE '%$iso%'";
+      $iso_stripped = preg_replace("/[^a-z]/i", "", strtolower($iso));
+
+      $sql .= " OR iso = '$iso'";
+      $sql .= " OR iso_stripped = '$iso_stripped'";
     }
 
     if (strlen($issn) > 0) {
-      $sql .= " OR issn LIKE '%$issn%'";
+      $sql .= " OR issn = '$issn'";
     }
+      
 
     $result = $db->query($sql);
 
@@ -41,9 +45,56 @@ class Journals {
     return false;
   }
 
+  function find_distinct($db, $search_db = "") {
+    $query = "SELECT DISTINCT(journal) FROM Articles)";
+
+    if ($search_db !== "") {
+      $query .= " WHERE search_db = '{$search_db}'";
+    }
+
+    return $db->query($query);
+  }
+
+  function find_excluded_ids($db, $exclusion_list) {
+    $issn = implode("','", array_keys($exclusion_list));
+    $titles = implode("','", $exclusion_list);
+
+    $where = array();
+
+    if (count($issn) > 0) {
+      $where[] = "issn IN ('{$issn}')";
+    }
+
+    if (count($titles) > 0) {
+      $where[] = "title IN ('{$titles}')";
+    }
+
+    if (count($where) > 0) {
+      $where = "WHERE " . implode(' OR ', $where);
+    }
+
+    $sql = "SELECT id FROM Journals {$where}";
+    
+    $result = $db->query($sql);
+
+    $journal_ids = array();
+    
+    if ($result === false) {
+        return $journal_ids;
+    }
+    
+    while ($data = $result->fetch_array()) {
+        $journal_ids[] = $data['id'];
+    }
+    
+    return $journal_ids;
+  }
+
   // Insert a journal
-  function insert($db, $title, $iso = "", $issn = "") {
+  function insert($db, $title, $iso = "", $issn = "", $journal_list = false) {
     require_once("journal_definitions.php");
+
+    $iso_stripped = preg_replace("/[^a-z]/i", "", strtolower($iso));
 
     // Find existing journal
     $existing_journal = $this->find($db, $title, $iso, $issn);
@@ -64,13 +115,11 @@ class Journals {
     // Insert journal
     $title_fixed = addslashes($title);
     
-    if ($result = $db->query("INSERT INTO Journals (title, iso, issn) VALUES ('$title_fixed', '$iso', '$issn')")) {
+    if ($result = $db->query("INSERT INTO Journals (title, iso, issn, iso_stripped) VALUES ('$title_fixed', '$iso', '$issn', '$iso_stripped')")) {
       $journal_id = $db->connection->insert_id;
-
-      include("../config.php");
       
       // Check if journal list is set in config
-      if ($config["journal_list_run"] === true) {
+      if ($journal_list === true) {
         // Find definition
         $definitions = new Journal_definitions();
         $journal_definition = $definitions->find($db, $title, $iso, $issn);
@@ -89,7 +138,14 @@ class Journals {
   }
 
   function get_relevant_journals($db) {
-    $query = "SELECT count(a.id) AS count, j.id, j.title, j.issn
+    // $query = "SELECT count(a.id) AS count, j.id, j.iso, j.title, j.issn
+    //   FROM articles a
+    //   JOIN journals j ON a.journal = j.id
+    //   WHERE a.abstract != ''
+    //     AND j.id IN (77,85,92,246,381,389,412,424,518,549,567,590,593,643,813)
+    //   GROUP BY a.journal
+    //   ORDER BY count DESC";
+    $query = "SELECT count(a.id) AS count, j.id, j.iso, j.title, j.issn
       FROM articles a
       JOIN journals j ON a.journal = j.id
       WHERE a.abstract != ''
@@ -117,8 +173,29 @@ class Journals {
   function update($db, $id, $title, $iso = "", $issn = "") {
     // Insert journal
     $title_fixed = addslashes($title);
+
+    $iso_stripped = preg_replace("/[^a-z]/i", "", strtolower($iso));
     
-    $db->query("UPDATE Journals SET title = '$title_fixed', iso = '$iso', issn = '$issn' WHERE id = $id");
+    $query = "UPDATE Journals SET title = '$title_fixed'";
+
+    if (strlen($iso) > 0) {
+      $query .= ", iso = '$iso'";
+      $query .= ", iso_stripped = '$iso_stripped'";
+    }
+
+    if (strlen($issn) > 0) {
+      $query .= ", issn = '$issn'";
+    }
+
+    $query .= " WHERE id = $id";
+
+    $db->query($query);
+  }
+
+  function delete($db, $id) {
+    $db->query("DELETE FROM Journals WHERE id = {$id}");
+
+    return $db->connection->affected_rows;
   }
 
   // Truncate the journals table

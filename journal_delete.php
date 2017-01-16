@@ -16,21 +16,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-error_reporting(E_ALL);
-
 $time_start = microtime(true);
 
-require_once('controllers/init.php');
+require_once('controllers/journal_delete.php');
 
-$init = new Init();
+$journal_delete = new Journal_delete();
 
-$reinit = false;
+list($articles_removed, $journals_removed) = $journal_delete->remove_excluded_journals();
 
-if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
-  $reinit = true;
-}
+echo "Articles removed: " . $articles_removed . "<br/>";
+echo "Journals removed: " . $journals_removed . "<br/>";
 
-$init->run($reinit);
+echo "Fixing journals... ";
+
+$journal_delete->fix_journal_metadata();
+$journal_delete->fix_journal_assignments();
+
+echo "done.<br/>";
 
 echo "Time elapsed: " . (microtime(true) - $time_start) . "s <br/>";
 

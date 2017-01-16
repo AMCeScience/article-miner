@@ -1,5 +1,23 @@
 <?php 
 
+// Article Miner, a document parser for Pubmed, Pubmed Central, Ovid, Scopus, and Web of Science
+// Copyright (C) 2016 Allard van Altena
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// Adapted from: https://github.com/asifr/PHP-PubMed-API-Wrapper
+
 class PubMedAPI {
   // Pagination
   public $limit = 10;
@@ -167,7 +185,7 @@ class PubMedAPI {
     switch ($this->search_mode) {
       case 'fetch':
         $params['id'] = implode(',', $this->fetch_ids);
-        $params['rettype'] = 'null';
+        //$params['rettype'] = 'null';
         $params['retmode'] = 'xml';
 
         break;
@@ -203,7 +221,7 @@ class PubMedAPI {
 
   private function _retrieve_data() {
     $data = $this->_load_file_from_url($this->_get_url());
-
+    
     switch ($this->data_type) {
       case 'asn.1':
         if ($this->display_mode === 'raw') {

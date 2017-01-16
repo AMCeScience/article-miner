@@ -43,8 +43,26 @@
         <a href="init.php?reinit=true">Re-initialise the database (removes all data)</a>
       </p>
       <p>
-        <a href="compare.php">Remove duplicates from articles</a>
+        <a href="compare.php">Remove empty abstracts and duplicates from articles</a>
       </p>
+      
+      <hr/>
+      
+      <p>
+        <a href="journal_delete.php">Remove excluded journals</a>
+      </p>
+      <p>
+        <a href="pubmedAPI/search.php">Search PubMed</a>
+      </p>
+      <p>
+        <a href="pubmedAPI/retrieve.php">Retrieve PubMed</a>
+      </p>
+      <p>
+        <a href="compare.php?pubmed=true">Remove empty abstracts and duplicates from PubMed articles</a>
+      </p>
+
+      <hr/>
+
       <p>
         <a href="csv.php">Get articles CSV</a>
       </p>

@@ -39,12 +39,31 @@ class Articles {
     return 0;
   }
 
+  function count_by_journal($db, $search_db) {
+    $result = $db->query("SELECT journal, count(id) AS count
+      FROM articles
+      WHERE search_db = '{$search_db}'
+      GROUP BY journal
+      ORDER BY count DESC");
+
+    if ($result) {
+      $return_array = array();
+
+      while ($journal = $result->fetch_array()) {
+        $return_array[$journal['journal']] = $journal['count'];
+      }
+
+      return $return_array;
+    }
+
+    return false;
+  }
+
   function find_by_journal($db, $journal_id) {
     $result = $db->query("SELECT * 
       FROM Articles AS a 
       JOIN Journals AS j ON a.journal = j.id
-      WHERE j.issn = '{$journal_id}'
-        OR j.title = '{$journal_id}'
+      WHERE j.id = '{$journal_id}'
     ");
 
     if ($result) {
@@ -77,31 +96,56 @@ class Articles {
     return false;
   }
 
-  // Get titles (stripped of all characters other than a-z) and DOIs of all articles in DB
-  // Also, count available (i.e. non-empty) titles and DOIs
-  function get_titles_and_dois($db) {
-    $result = $db->query("SELECT id, title_stripped, doi, (
-          SELECT count(inner_article.id) FROM Articles AS inner_article 
-          WHERE inner_article.doi = outer_article.doi AND inner_article.doi != '' 
-          GROUP BY inner_article.doi
-        ) as doi_count, (
-          (SELECT count(inner_article.id) FROM Articles AS inner_article 
-          WHERE inner_article.title_stripped = outer_article.title_stripped AND inner_article.title_stripped != '' 
-          GROUP BY inner_article.title_stripped)
-        ) as title_count
-      FROM Articles AS outer_article
-        WHERE (
-          SELECT count(inner_article.id) FROM Articles AS inner_article 
-          WHERE inner_article.title_stripped = outer_article.title_stripped AND inner_article.title_stripped != '' 
-          GROUP BY inner_article.title_stripped
-        ) > 1 OR (
-          SELECT count(inner_article.id) FROM Articles AS inner_article 
-          WHERE inner_article.doi = outer_article.doi AND inner_article.doi != '' 
-          GROUP BY inner_article.doi
-        ) > 1
-    ");
+  function delete_empty_abstracts($db) {
+    $sql = "DELETE FROM articles WHERE abstract = ''";
 
-    return $result;
+    $db->query($sql);
+
+    return $db->connection->affected_rows;
+  }
+
+  function delete_double_title($db, $search_db = false) {
+    $clause = "";
+
+    if ($search_db !== false) {
+      $clause = " AND search_db = '{$search_db}'";
+    }
+
+    $sql = "DELETE FROM articles
+      WHERE id IN (
+        SELECT id FROM (SELECT id
+        FROM Articles AS outer_article
+        WHERE title != ''{$clause}
+        GROUP BY title
+        HAVING count(*) > 1
+        ORDER BY id) AS x
+      )";
+
+      $db->query($sql);
+
+      return $db->connection->affected_rows;
+  }
+
+  function delete_double_doi($db, $search_db = false) {
+    $clause = "";
+
+    if ($search_db !== false) {
+      $clause = " AND search_db = '{$search_db}'";
+    }
+
+    $sql = "DELETE FROM articles
+      WHERE id IN (
+        SELECT id FROM (SELECT id
+        FROM Articles AS outer_article
+        WHERE doi != ''{$clause}
+        GROUP BY doi
+        HAVING count(*) > 1
+        ORDER BY id) AS x
+      )";
+
+      $db->query($sql);
+
+      return $db->connection->affected_rows;
   }
 
   // Insert an articles
@@ -167,7 +211,7 @@ class Articles {
         unset($pubmed_ids[$key]);
       }
     }
-
+    
     $query = array();
 
     foreach ($pubmed_ids as $pubmed_id) {
@@ -191,12 +235,16 @@ class Articles {
 
   function delete_by_db($db, $db_name) {
     $db->query("DELETE FROM Articles WHERE search_db = '$db_name'");
+
+    return $db->connection->affected_rows;
   }
 
   function delete_inverse_ids($db, $ids, $journal_id, $search_db) {
-      $ids = implode(",", $ids);
-      
-      $db->query("DELETE FROM Articles WHERE journal = {$journal_id} AND id NOT IN ({$ids}) AND search_db = '{$search_db}'");
+    $ids = implode(",", $ids);
+    
+    $db->query("DELETE FROM Articles WHERE journal = {$journal_id} AND id NOT IN ({$ids}) AND search_db = '{$search_db}'");
+
+    return $db->connection->affected_rows;
   }
   
   // Delete (an) article(s)
@@ -213,6 +261,14 @@ class Articles {
     $ids = implode(",", $ids);
 
     $db->query("DELETE FROM Articles WHERE id IN ($ids)");
+
+    return $db->connection->affected_rows;
+  }
+
+  function delete_by_journal($db, $journal_id) {
+    $db->query("DELETE FROM Articles WHERE journal = {$journal_id}");
+
+    return $db->connection->affected_rows;
   }
 
   // Checks whether there are any rows in the articles table

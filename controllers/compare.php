@@ -16,22 +16,32 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-error_reporting(E_ALL);
+class Compare {
+  function __construct($db = null) {
+    include('config.php');
 
-$time_start = microtime(true);
+    $this->config = $config;
 
-require_once('controllers/init.php');
+    $this->db = $db;
 
-$init = new Init();
+    if ($db === null) {
+      require_once('database.php');
 
-$reinit = false;
+      $this->db = new Connector();
 
-if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
-  $reinit = true;
+      $this->db->connect($this->config);
+    }
+  }
+
+  function remove_empty_and_doubles($remove_from_specific_db = false) {
+    require_once("models/articles.php");
+
+    $article_model = new Articles();
+
+    $abstracts_deleted = $article_model->delete_empty_abstracts($this->db);
+    $titles_deleted = $article_model->delete_double_title($this->db, $remove_from_specific_db);
+    $dois_deleted = $article_model->delete_double_doi($this->db, $remove_from_specific_db);
+
+    return [$abstracts_deleted, $titles_deleted, $dois_deleted];
+  }
 }
-
-$init->run($reinit);
-
-echo "Time elapsed: " . (microtime(true) - $time_start) . "s <br/>";
-
-echo "<a href='/index.php'>Back to index page</a>";

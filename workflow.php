@@ -16,22 +16,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-error_reporting(E_ALL);
+require_once('controllers/workflow.php');
 
-$time_start = microtime(true);
+$workflow = new Workflow();
 
-require_once('controllers/init.php');
-
-$init = new Init();
-
-$reinit = false;
-
-if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {
-  $reinit = true;
-}
-
-$init->run($reinit);
-
-echo "Time elapsed: " . (microtime(true) - $time_start) . "s <br/>";
+$workflow->run();
 
 echo "<a href='/index.php'>Back to index page</a>";

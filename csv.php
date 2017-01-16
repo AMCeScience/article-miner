@@ -29,14 +29,6 @@ $db->connect($config);
 // Filter articles with an empty abstract
 $where = ' WHERE abstract != ""';
 
-//if (count($config['exclude_journal_issn']) > 0) {
-//	$where .= ' AND j.issn NOT IN ("' . implode('", "', $config['exclude_journal_issn']) . '")';
-//}
-//
-//if (count($config['exclude_journal_id']) > 0) {
-//	$where .= ' AND j.id NOT IN ("' . implode('", "', $config['exclude_journal_id']) . '")';
-//}
-
 // Get articles from DB
 $articles = $db->query("SELECT a.title, a.abstract, a.search_db
 	FROM Articles AS a
