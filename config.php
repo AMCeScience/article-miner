@@ -82,6 +82,30 @@ $config['exclude_journal_array'] = array(
 	'empty3' => 'PeerJ',
 	'empty4' => 'Journal of Big Data'
 );
+$config['fix_duplicated_journals'] = array(
+	'45' => '957',
+	'148' => '964',
+	'834' => '97',
+	'941' => '287'
+);
+$config['fix_journal_metadata'] = array(
+	['from' => ['title', 'MOJ proteomics bioinformatics'], 'to' => ['title', 'MOJ proteomics & bioinformatics']],
+	['from' => ['issn', '2212-0661'], 'to' => ['iso', 'Appl Transl Genom']],
+	['from' => ['issn', '1942-597X'], 'to' => ['iso', 'AMIA Annu Symp Proc']],
+	['from' => ['issn', '2053-9517'], 'to' => ['iso', 'Big Data Soc']],
+	['from' => ['issn', '2168-9547'], 'to' => ['iso', 'Mol Biol (Los Angel)']],
+	['from' => ['issn', '2155-9627'], 'to' => ['iso', 'J Clin Res Bioeth']],
+	['from' => ['issn', '2451-9022'], 'to' => ['iso', 'Biol Psychiatry Cogn Neurosci Neuroimaging']],
+	['from' => ['issn', '1474-760X'], 'to' => ['title', 'Genome Biology']],
+	['from' => ['issn', '0973-2063'], 'to' => ['issn', '0973-8894']],
+	['from' => ['issn', '2327-9214'], 'to' => ['title', 'eGEMs']],
+	['from' => ['issn', '1544-2896'], 'to' => ['title', 'Journal of Undergraduate Neuroscience Education']],
+	['from' => ['issn', '2049-0801'], 'to' => ['title', 'Annals of Medicine and Surgery']],
+	['from' => ['iso', 'Nihon Rinsho'], 'to' => ['iso', 'Nippon Rinsho']],
+	['from' => ['iso', 'Brief Bioninform'], 'to' => ['iso', 'Brief. Bioinformatics']],
+	['from' => ['iso', 'Trends Ecol. Evol.'], 'to' => ['iso', 'Trends Ecol. Evol. (Amst.)']],
+	['from' => ['iso', 'Proc ACM SIGSPATIAL Int Conf Adv Inf'], 'to' => ['title', 'Proceedings of the ... ACM SIGSPATIAL International Conference on Advances in Geographic Information Systems : ACM GIS. ACM SIGSPATIAL International C']]
+);
 $config['exclude_journal_id'] = array();
 
 // Set test mode

@@ -54,32 +54,21 @@ class Journal_delete {
   }
 
   function fix_journal_metadata() {
-    $this->db->query("UPDATE Journals SET iso = 'Brief Bioninform' WHERE 'iso' = 'Brief. Bioinformatics';");
-    $this->db->query("UPDATE Journals SET issn = '2212-0661' WHERE iso = 'Appl Transl Genom';");
-    $this->db->query("UPDATE Journals SET issn = '1942-597X' WHERE iso = 'AMIA Annu Symp Proc';");
-    $this->db->query("UPDATE Journals SET issn = '2053-9517' WHERE iso = 'Big Data Soc';");
-    $this->db->query("UPDATE Journals SET iso = 'Trends Ecol. Evol.' WHERE iso = 'Trends Ecol. Evol. (Amst.)';");
-    $this->db->query("UPDATE Journals SET issn = '2168-9547' WHERE iso = 'Mol Biol (Los Angel)';");
-    $this->db->query("UPDATE Journals SET issn = '2155-9627' WHERE iso = 'J Clin Res Bioeth';");
-    $this->db->query("UPDATE Journals SET issn = '2451-9022' WHERE iso = 'Biol Psychiatry Cogn Neurosci Neuroimaging';");
-    $this->db->query("UPDATE Journals SET iso = 'Nihon Rinsho' WHERE iso = 'Nippon Rinsho';");
-    $this->db->query("UPDATE Journals SET title = 'MOJ proteomics bioinformatics' WHERE title = 'MOJ proteomics & bioinformatics';");
-    $this->db->query("UPDATE journals SET issn = '1474-760X' WHERE title = 'Genome Biology';");
-    $this->db->query("UPDATE journals SET issn = '0973-2063' WHERE issn = '0973-8894';");
-    $this->db->query("UPDATE journals SET issn = '2327-9214' WHERE title = 'eGEMs';");
-    $this->db->query("UPDATE journals SET issn = '1544-2896' WHERE title = 'Journal of Undergraduate Neuroscience Education';");
-    $this->db->query("UPDATE journals SET issn = '2049-0801' WHERE title = 'Annals of Medicine and Surgery';");
-    $this->db->query("UPDATE journals SET iso = 'Proc ACM SIGSPATIAL Int Conf Adv Inf' WHERE title = 'Proceedings of the ... ACM SIGSPATIAL International Conference on Advances in Geographic Information Systems : ACM GIS. ACM SIGSPATIAL International C';");
+    foreach ($this->config['fix_journal_metadata'] as $item) {
+      $from = $item['from'];
+      $to = $item['to'];
+
+      $this->db->query("UPDATE Journals SET {$from[0]} = '{$from[1]}' WHERE {$to[0]} = '{$to[1]}'");
+    }
   }
 
   function fix_journal_assignments() {
     $this->db->query("SET FOREIGN_KEY_CHECKS = 0");
 
     // Fixing journals that got duplicated
-    $this->db->query("UPDATE articles SET journal = 45 WHERE journal = 957");
-    $this->db->query("UPDATE articles SET journal = 148 WHERE journal = 964");
-    $this->db->query("UPDATE articles SET journal = 834 WHERE journal = 97;");
-    $this->db->query("UPDATE articles SET journal = 941 WHERE journal = 287;");
+    foreach ($this->config['fix_duplicated_journals'] as $from => $to) {
+      $this->db->query("UPDATE articles SET journal = {$from} WHERE journal = {$to}");
+    }
 
     // Rename search_db from pubmed_central to pubmed
     $this->db->query("UPDATE articles SET search_db = 'pubmed' WHERE search_db = 'pubmed_central';");
