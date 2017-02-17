@@ -47,7 +47,7 @@ class PubMedAPI {
   private $search_url_params = '';
 
   // Used for debugging, prints request url for API
-  public $show_urls = true;
+  public $show_urls = false;
 
   // Available modes used for displaying data or returning data
   // Display mode:

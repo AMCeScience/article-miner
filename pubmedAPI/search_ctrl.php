@@ -23,9 +23,10 @@ class PubMedIDRetriever {
   public $excludes;
   public $limit_modifier = 10;
 
-  function __construct($db, $article_model, $pubmed_api, $excludes) {
+  function __construct($db, $article_model, $journal_model, $pubmed_api, $excludes) {
     $this->db = $db;
     $this->article_model = $article_model;
+    $this->journal_model = $journal_model;
     $this->pubmed_api = $pubmed_api;
     $this->excludes = $excludes;
   }
@@ -33,7 +34,7 @@ class PubMedIDRetriever {
   function run() {
     $journals = $this->get_journals();
     $filtered = $this->filter_journals($journals);
-
+    
     foreach ($filtered as $journal) {
       $query = $this->get_query($journal['id'], $journal['issn'], $journal['iso']);
       
@@ -153,11 +154,7 @@ class PubMedIDRetriever {
   }
 
   function get_journals() {
-    include('../models/journals.php');
-
-    $journal_model = new Journals();
-    
-    $results = $journal_model->get_relevant_journals($this->db);
+    $results = $this->journal_model->get_relevant_journals($this->db);
 
     $journal_array = array();
 
@@ -168,11 +165,30 @@ class PubMedIDRetriever {
     return $journal_array;
   }
 
+  /**
+  * Continue from previous search
+  */
+  function get_searched_journals() {
+    $journals = $this->journal_model->get_pubmed_journals($this->db);
+
+    $journals_array = array();
+
+    if ($journals != false) {
+      while ($data = $journals->fetch_array()) {
+        $journals_array[] = $data['journal_id'];
+      }
+    }
+
+    return $journals_array;
+  }
+
   function filter_journals($journals) {
     $excludes = $this->excludes;
 
-    return array_filter($journals, function($journal) use ($excludes) {
-      return !(in_array($journal['title'], $this->excludes) || in_array($journal['issn'], array_flip($this->excludes)));
+    $journals_done = $this->get_searched_journals();
+
+    return array_filter($journals, function($journal) use ($excludes, $journals_done) {
+      return !(in_array($journal['id'], $journals_done) || in_array($journal['title'], $this->excludes) || in_array($journal['issn'], array_flip($this->excludes)));
     }, ARRAY_FILTER_USE_BOTH);
   }
 }

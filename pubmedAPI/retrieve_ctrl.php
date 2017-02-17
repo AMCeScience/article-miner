@@ -22,21 +22,22 @@ class PubMedArticleRetriever {
   public $pubmed_api;
   public $excludes;
 
-  function __construct($db, $article_model, $pubmed_api) {
+  function __construct($db, $article_model, $journal_model, $pubmed_api) {
     $this->db = $db;
     $this->article_model = $article_model;
+    $this->journal_model = $journal_model;
     $this->pubmed_api = $pubmed_api;
   }
 
   function run() {
     $journals = $this->get_journals();
-
+    
     foreach ($journals as $journal) {
-      $pubmed_ids = $this->get_pubmed_ids($journal['journal_id']);
+      $pubmed_ids = $this->get_pubmed_ids($journal);
       $pubmed_articles = $this->get_pubmed_articles($pubmed_ids);
       
       if ($pubmed_articles === false) {
-        echo $journal['id'] . ' <b>ARTICLES</b><br/>';
+        echo $journal . ' <b>ARTICLES</b><br/>';
 
         continue;
       }
@@ -77,16 +78,15 @@ class PubMedArticleRetriever {
   }
 
   function get_journals() {
-    include('../models/journals.php');
-
-    $journal_model = new Journals();
-    
-    $results = $journal_model->get_pubmed_journals($this->db);
+    $done = $this->journal_model->get_pubmed_fetched_journals($this->db);
+    $all = $this->journal_model->get_pubmed_journals($this->db);
 
     $journal_array = array();
 
-    while($journal = $results->fetch_array()) {
-      $journal_array[] = $journal;
+    while($journal = $all->fetch_array()) {
+      if (!in_array($journal['journal_id'], $done)) {
+        $journal_array[] = $journal['journal_id'];
+      }
     }
 
     return $journal_array;

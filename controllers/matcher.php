@@ -17,15 +17,20 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class Matcher {
-  function __construct() {
-    require_once('config.php');
-    require_once('database.php');
+  function __construct($db) {
+    include('config.php');
 
     $this->config = $config;
 
-    $this->db = new Connector();
+    $this->db = $db;
 
-    $this->db->connect($this->config);
+    if ($db === null) {
+      require_once('database.php');
+
+      $this->db = new Connector();
+
+      $this->db->connect($this->config);
+    }
   }
 
   function random_match() {
@@ -35,34 +40,49 @@ class Matcher {
     $article_model = new Articles();
     $journal_model = new Journals();
 
+    $article_model->reset_batch($this->db);
+
+    $cur_batch = 1;
+
     $journals = $journal_model->find_distinct($this->db, 'pubmed');
 
-    while ($journal = $journals->fetch_array()) {
-      $BD_articles = $db->query("SELECT count(*) AS count FROM Articles WHERE search_db = 'pubmed' AND journal = {$journal['journal']}");
-      $BD_array = $BD_articles->fetch_array();
-      $BD_count = (int) $BD_array['count'];
+    $journal_array = $this->create_array($journals);
 
-      $non_BD_articles = $this->create_array($db->query("SELECT id FROM Articles WHERE search_db = 'robot' AND journal = {$journal['journal']}"));
+    $BD_journal_array = array();
+
+    foreach ($journal_array as $journal) {
+      $BD_articles = $this->db->query("SELECT count(*) AS count FROM Articles WHERE search_db = 'pubmed' AND journal = {$journal['journal']}");
+      $BD_array = $BD_articles->fetch_array();
+
+      $BD_journal_array[$journal['journal']] = (int) $BD_array['count'];
+    }
+
+    while ($cur_batch <= $this->config['folds']) {
+      foreach ($BD_journal_array as $journal => $BD_count) {
+        $NBD_articles = $this->create_array($this->db->query("SELECT id FROM Articles WHERE search_db = 'robot' AND journal = {$journal} AND batch = 0"));
+        $NBD_count = count($NBD_articles);
+
+        // Not enough non big data articles, skip these on first batch
+        if ($cur_batch === 1 && (($BD_count * $this->config['folds'] * $this->config['fold_multiplication'] > $NBD_count) || $NBD_count == 0)) {
+          // Remove from array
+          unset($BD_journal_array[$journal]);
+
+          continue;
+        }
+
+        $NBD_articles = array_map(function(&$item) {
+          return $item['id'];
+        }, $NBD_articles);
         
-      if (count($non_BD_articles) === $BD_count) {
-        continue;
+        shuffle($NBD_articles);
+        
+        $selected_articles = array_slice($NBD_articles, 0, $BD_count * $this->config['fold_multiplication']);
+
+        $article_model->set_batch($this->db, $cur_batch, $selected_articles);
+        $article_model->set_batch_by_journal($this->db, 99, $journal, 'pubmed');
       }
-      
-      if (count($non_BD_articles) < $BD_count) {
-        echo 'Not enough entries for journal: ' . $journal['journal'] . ', selected ' . count($non_BD_articles) . ' articles<br/>';
-          
-        continue;
-      }
-      
-      $non_BD_articles = array_map(function(&$item) {
-        return $item['id'];
-      }, $non_BD_articles);
-      
-      shuffle($non_BD_articles);
-      
-      $selected_articles = array_slice($non_BD_articles, 0, $BD_count * 2);
-      
-      $article_model->delete_inverse_ids($db, $selected_articles, $journal['journal'], 'robot');
+
+      $cur_batch++;
     }
   }
 

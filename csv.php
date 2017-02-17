@@ -26,8 +26,11 @@ $db = new Connector();
 
 $db->connect($config);
 
+$batch = 4;
+
 // Filter articles with an empty abstract
 $where = ' WHERE abstract != ""';
+$where .= " AND ((batch = {$batch} AND search_db = 'robot') OR (batch = 99 AND search_db = 'pubmed'))";
 
 // Get articles from DB
 $articles = $db->query("SELECT a.title, a.abstract, a.search_db
@@ -42,7 +45,7 @@ $output = array();
 while ($article = $articles->fetch_array()) {
 	// Filter any non characters, retain a-z, - and spaces
 	// Merge title and abstract into one CSV row
-	$text = preg_replace("/[^a-zA-Z'\-\ ]/", "", $article["title"] . " " . $article["abstract"]);
+	$text = preg_replace("/[^a-zA-Z\-\ ]/", "", $article["title"] . " " . $article["abstract"]);
 	// Replace dashes within words with underscores
 	$text = preg_replace("/(?<=\w)(-)(?=\w)/", "_", $text);
 	// Replace double dashes with a space

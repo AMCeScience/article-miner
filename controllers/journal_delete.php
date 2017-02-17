@@ -65,9 +65,19 @@ class Journal_delete {
   function fix_journal_assignments() {
     $this->db->query("SET FOREIGN_KEY_CHECKS = 0");
 
+    require_once('models/journals.php');
+
+    $journal_model = new Journals();
+
     // Fixing journals that got duplicated
-    foreach ($this->config['fix_duplicated_journals'] as $from => $to) {
-      $this->db->query("UPDATE articles SET journal = {$from} WHERE journal = {$to}");
+    foreach ($this->config['fix_duplicated_journals'] as $item) {
+      $from = $item['from'];
+      $to = $item['to'];
+
+      $from_journal = $journal_model->find($this->db, $from, $from, $from);
+      $to_journal = $journal_model->find($this->db, $to, $to, $to);
+      
+      $this->db->query("UPDATE articles SET journal = '{$to_journal['id']}' WHERE journal = '{$from_journal['id']}'");
     }
 
     // Rename search_db from pubmed_central to pubmed

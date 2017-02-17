@@ -46,7 +46,7 @@ class Journals {
   }
 
   function find_distinct($db, $search_db = "") {
-    $query = "SELECT DISTINCT(journal) FROM Articles)";
+    $query = "SELECT DISTINCT(journal) FROM Articles";
 
     if ($search_db !== "") {
       $query .= " WHERE search_db = '{$search_db}'";
@@ -102,7 +102,7 @@ class Journals {
     if ($existing_journal && $existing_journal["issn"] == '' && $issn != '') {
       $this->update($db, $existing_journal["id"], $existing_journal["title"], $existing_journal["iso"], $issn);
     }
-
+    
     if ($existing_journal && $existing_journal["iso"] == '' && $iso != '') {
       $this->update($db, $existing_journal["id"], $existing_journal["title"], $iso, $existing_journal["issn"]);
     }
@@ -158,6 +158,20 @@ class Journals {
     }
 
     return false;
+  }
+
+  function get_pubmed_fetched_journals($db) {
+    $done_sql = "SELECT DISTINCT(journal) FROM Articles WHERE search_db = 'robot'";
+
+    $done_array = array();
+
+    if ($done_result = $db->query($done_sql)) {
+      while ($result = $done_result->fetch_array()) {
+        $done_array[] = $result['journal'];
+      }
+    }
+
+    return $done_array;
   }
 
   function get_pubmed_journals($db) {

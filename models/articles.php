@@ -106,24 +106,48 @@ class Articles {
 
   function delete_double_title($db, $search_db = false) {
     $clause = "";
+    $removed = 0;
 
     if ($search_db !== false) {
       $clause = " AND search_db = '{$search_db}'";
+
+      $removed += $this->delete_double_title_between_search_db($db, $search_db);
     }
 
     $sql = "DELETE FROM articles
       WHERE id IN (
-        SELECT id FROM (SELECT id
-        FROM Articles AS outer_article
-        WHERE title != ''{$clause}
-        GROUP BY title
-        HAVING count(*) > 1
-        ORDER BY id) AS x
+        SELECT id FROM (
+          SELECT id
+          FROM Articles AS outer_article
+          WHERE title_stripped != ''{$clause}
+          GROUP BY title_stripped
+          HAVING count(*) > 1
+          ORDER BY id
+        ) AS x
+      )";
+      
+    $db->query($sql);
+
+    return $removed + $db->connection->affected_rows;
+  }
+
+  function delete_double_title_between_search_db($db, $search_db) {
+    $sql = "DELETE FROM articles
+      WHERE id IN (
+        SELECT id FROM (
+          SELECT id FROM Articles WHERE title_stripped IN (
+            SELECT title_stripped
+            FROM Articles AS outer_article
+            WHERE title_stripped != ''
+            GROUP BY title_stripped
+            HAVING count(*) > 1
+          ) AND search_db = 'robot'
+        ) AS x
       )";
 
-      $db->query($sql);
+    $db->query($sql);
 
-      return $db->connection->affected_rows;
+    return $db->connection->affected_rows;
   }
 
   function delete_double_doi($db, $search_db = false) {
@@ -143,9 +167,9 @@ class Articles {
         ORDER BY id) AS x
       )";
 
-      $db->query($sql);
+    $db->query($sql);
 
-      return $db->connection->affected_rows;
+    return $db->connection->affected_rows;
   }
 
   // Insert an articles
@@ -231,6 +255,24 @@ class Articles {
     }
 
     return false;
+  }
+
+  function reset_batch($db) {
+    $result = $db->query("UPDATE Articles SET batch = 0");
+
+    return $db->connection->affected_rows;    
+  }
+
+  function set_batch($db, $batch_id, $article_ids) {
+    $db->query("UPDATE Articles SET batch = {$batch_id} WHERE id IN (" . implode(',', $article_ids) . ")");
+
+    return $db->connection->affected_rows;
+  }
+
+  function set_batch_by_journal($db, $batch_id, $journal_id, $search_db) {
+    $db->query("UPDATE Articles SET batch = {$batch_id} WHERE journal = {$journal_id} and search_db = '{$search_db}'");
+
+    return $db->connection->affected_rows;
   }
 
   function delete_by_db($db, $db_name) {

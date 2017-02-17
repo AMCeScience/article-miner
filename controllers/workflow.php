@@ -29,7 +29,9 @@ class Workflow {
   }
 
   function run() {
-    $this->init_base_articles();
+    $article_count = $this->init_base_articles();
+
+    echo $article_count . ' articles inserted. <br/>';
 
     // Fix journals
     require_once('controllers/journal_delete.php');
@@ -37,13 +39,20 @@ class Workflow {
     $journal_delete = new Journal_delete($this->db);
 
     // Remove excluded journals before search
-    $journal_delete->remove_excluded_journals();
+    list($articles, $journals) = $journal_delete->remove_excluded_journals();
+
+    echo $articles . ' articles removed. <br/>';
+    echo $journals . ' journals removed. <br/>';
+
     // Fix the metadata of several journals before search
     $journal_delete->fix_journal_metadata();
     // Fix the assigned journals for some of the gathered articles
     $journal_delete->fix_journal_assignments();
     
-    $this->remove_double_articles();
+    list($empty, $doubles) = $this->remove_double_articles();
+
+    echo $empty . ' empty abstracts removed. <br/>';
+    echo $doubles . ' doubles removed. <br/>';
 
     // Search and fetch pubmed articles
     $this->run_pubmed_search();
@@ -54,7 +63,12 @@ class Workflow {
 
     // Remove any article that has an empty abstract or double entries
     // Only remove the robot gathered articles
-    $this->remove_double_articles('robot');
+    list($empty, $doubles) = $this->remove_double_articles('robot');
+
+    echo $empty . ' empty abstracts removed. <br/>';
+    echo $doubles . ' doubles removed. <br/>';
+
+    $this->matcher($this->db);
   }
 
   function matcher() {
@@ -68,10 +82,15 @@ class Workflow {
   function init_base_articles() {
     // Read the initial articles from files
     require_once('controllers/init.php');
+    require_once('models/articles.php');
+    
+    $article_model = new Articles();
 
     $init = new Init($this->db);
 
     $init->run(true);
+
+    return $article_model->count($this->db);
   }
 
   function remove_double_articles($type = false) {
@@ -80,40 +99,44 @@ class Workflow {
 
     $compare = new Compare($this->db);
 
-    $compare->remove_empty_and_doubles($type);
+    list($abstracts_deleted, $titles_deleted, $dois_deleted) = $compare->remove_empty_and_doubles($type);
+
+    return array($abstracts_deleted, $titles_deleted + $dois_deleted);
   }
 
   function run_pubmed_search() {
     // Search PubMed
+    require_once('pubmedAPI/pubmedAPI.php');
     require_once('pubmedAPI/search_ctrl.php');
     require_once('models/articles.php');
+    require_once('models/journals.php');
 
     $article_model = new Articles();
+    $journal_model = new Journals();
 
     $pubMedAPI = new PubMedAPI();
     $pubMedAPI->limit = 50;
-    $pubMedAPI->show_urls = false;
     $pubMedAPI->display_mode = false;
-    $pubMedAPI->return_mode = 'parsed';
 
-    $retriever = new PubMedIDRetriever($db, $article_model, $pubMedAPI, $config['exclude_journal_array']);
+    $retriever = new PubMedIDRetriever($this->db, $article_model, $journal_model, $pubMedAPI, $this->config['exclude_journal_array']);
     $retriever->run();
   }
 
   function run_pubmed_retrieve() {
     // Retrieve PubMed
+    require_once('pubmedAPI/pubmedAPI.php');
     require_once('pubmedAPI/retrieve_ctrl.php');
     require_once('models/articles.php');
+    require_once('models/journals.php');
 
     $article_model = new Articles();
+    $journal_model = new Journals();
 
     $pubMedAPI = new PubMedAPI();
     $pubMedAPI->limit = 10000;
-    $pubMedAPI->show_urls = false;
     $pubMedAPI->display_mode = false;
-    $pubMedAPI->return_mode = 'parsed';
 
-    $retriever = new PubMedArticleRetriever($db, $article_model, $pubMedAPI);
+    $retriever = new PubMedArticleRetriever($this->db, $article_model, $journal_model, $pubMedAPI);
     $retriever->run();
   }
 }

@@ -49,6 +49,9 @@ $config["dir"] = "files/contrast/";
 // File dir for test mode, appended to every _dir listed above
 $config["test_dir"] = "files/test folder/";
 
+$config['folds'] = 4;
+$config['fold_multiplication'] = 2;
+
 // Excludes for output
 $config['exclude_journal_array'] = array(
 	'2167-6461' => 'Proceedings : ... IEEE International Conference on Big Data. IEEE International Conference on Big Data',
@@ -83,10 +86,9 @@ $config['exclude_journal_array'] = array(
 	'empty4' => 'Journal of Big Data'
 );
 $config['fix_duplicated_journals'] = array(
-	'45' => '957',
-	'148' => '964',
-	'834' => '97',
-	'941' => '287'
+	['from' => 'AMIA Annual Symposium Proceedings', 'to' => 'AMIA Annu Symp Proc']
+// 	'148' => '964',
+// 	'834' => '97'
 );
 $config['fix_journal_metadata'] = array(
 	['from' => ['title', 'MOJ proteomics bioinformatics'], 'to' => ['title', 'MOJ proteomics & bioinformatics']],

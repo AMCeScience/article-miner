@@ -38,33 +38,46 @@
 				$pubmed_count = $article_model->count_by_journal($db, 'pubmed');
 				$robot_count = $article_model->count_by_journal($db, 'robot');
 
-				$tot = 0;
-				$pub_miss = 0;
-				$non_matches = 0;
-				$fold_requirement = 1;
+				$reqs = [1,2,3,4,5,6,7,8,9,10];
 
-				foreach ($pubmed_count as $journal => $count) {
-					$matching = 0;
+				foreach ($reqs as $fold_requirement) {
+					$included = 0;
+					$BD_pubs_missed = 0;
+					$publications_missed = 0;
+					$matches = 0;
+					$non_matches = 0;
+					$fold_multiplication = 2;
 
-					if (array_key_exists($journal, $robot_count)) {
-						$matching = $robot_count[$journal];
+					foreach ($pubmed_count as $journal => $count) {
+						$matching = 0;
+
+						if (array_key_exists($journal, $robot_count)) {
+							$matching = $robot_count[$journal];
+						}
+
+						$is_sufficient = ($count * $fold_multiplication * $fold_requirement <= $matching);
+
+						if (!$is_sufficient) {
+							$non_matches++;
+							$BD_pubs_missed += $count;
+							// $publications_missed += $count + $matching;
+						} else {
+							$matches++;
+							// Add BD count plus the number of NBD that will be included based on the BD count
+							// BD count times the fold multiplication times the number of folds
+							$included += $count + ($count * $fold_multiplication * $fold_requirement);
+						}
+
+						// echo '<tr><td>' . $journal . '</td><td>' . $count . '</td><td>' . $matching . '</td><td>' . ($is_sufficient ? 'true' : 'false') . '</td></tr>';
 					}
 
-					$is_sufficient = ($count * $fold_requirement <= $matching);
-
-					if (!$is_sufficient) {
-						$non_matches++;
-						$pub_miss += $count;
-					}
-
-					$tot += $matching;
-
-					echo '<tr><td>' . $journal . '</td><td>' . $count . '</td><td>' . $matching . '</td><td>' . ($is_sufficient ? 'true' : 'false') . '</td></tr>';
+					echo 'Sufficient: ' . $matches . '<br/>';
+					echo 'Non-sufficient: ' . $non_matches . '<br/>';
+					echo 'Big Data publications missed: ' . $BD_pubs_missed . '<br/>';
+					// echo 'Publications missed: ' . $publications_missed . '<br/>';
+					echo 'Total publications included: ' . $included . '<br/><br/>';
 				}
 			?>
 		</table>
-
-		<?php echo 'Non-sufficient: ' . $non_matches; ?>
-		<?php echo $pub_miss; echo ' ' . $tot; ?>
 	</body>
 </html>
