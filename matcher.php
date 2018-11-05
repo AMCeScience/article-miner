@@ -24,6 +24,6 @@ $db = new Connector();
 
 $db->connect($config);
 
-$matcher = new Matcher($this->db);
+$matcher = new Matcher($db);
 
 $matcher->random_match();

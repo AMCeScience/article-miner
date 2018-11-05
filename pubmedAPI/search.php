@@ -19,6 +19,7 @@
 include('PubMedAPI.php');
 include('../config.php');
 include('../models/articles.php');
+include('../models/journals.php');
 require_once('../database.php');
 require_once('search_ctrl.php');
 
@@ -27,6 +28,7 @@ $db = new Connector();
 $db->connect($config);
 
 $article_model = new Articles();
+$journal_model = new Journals();
 
 $pubMedAPI = new PubMedAPI();
 $pubMedAPI->limit = 50;
@@ -34,7 +36,7 @@ $pubMedAPI->show_urls = false;
 $pubMedAPI->display_mode = false;
 $pubMedAPI->return_mode = 'parsed';
 
-$retriever = new PubMedIDRetriever($db, $article_model, $pubMedAPI, $config['exclude_journal_array']);
+$retriever = new PubMedIDRetriever($db, $article_model, $journal_model, $pubMedAPI, $config['exclude_journal_array']);
 $retriever->run();
 
 echo "<a href='/index.php'>Back to index page</a>";

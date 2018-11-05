@@ -20,8 +20,8 @@
 // _reinit: if the parser has run before, should the database be cleared and the parser run again
 // _dir: location of the input files for the parser
 
-$config["journal_list_run"] = true;
-$config["journal_list_reinit"] = true;
+$config["journal_list_run"] = false;
+$config["journal_list_reinit"] = false;
 $config["journal_list_dir"] = "files/journal_categories.csv";
 
 $config["pubmed_central_run"] = true;
@@ -115,7 +115,7 @@ $config["test"] = false;
 
 $config["database"]["ip"] = "localhost";
 $config["database"]["username"] = "root";
-$config["database"]["password"] = "root";
+$config["database"]["password"] = "password";
 $config["database"]["schema"] = "miner";
 
 if (isset($_GET) && isset($_GET["reinit"]) && $_GET["reinit"] == "true") {

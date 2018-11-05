@@ -3,6 +3,15 @@ use miner;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+CREATE TABLE `Pubmed_articles` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `pubmed_id` int(11) NOT NULL,
+  `journal_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `journal_idx` (`journal_id`),
+  CONSTRAINT `journal_id` FOREIGN KEY (`journal_id`) REFERENCES `Journals` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE `Articles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(300) NOT NULL,

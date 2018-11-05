@@ -380,6 +380,10 @@ class Fetch_data {
       $this->raw = $xml;
       $result = $this->parse_xml($this->raw);
     } else {
+      echo '<pre><code>';
+      print_r($this->raw);
+      echo '</pre></code>';
+      
       throw new Exception('Data type not supported.');
     }
 
